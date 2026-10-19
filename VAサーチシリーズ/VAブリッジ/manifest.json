@@ -1,0 +1,15 @@
+{
+  "project": "VA_Bridge",
+  "modules": [
+    {"name": "ThisWorkbook", "type": "Document", "file": "ThisWorkbook.bas"},
+    {"name": "Sheet1", "type": "Document", "file": "Sheet1.bas"},
+    {"name": "frmSettings", "type": "Form", "file": "frmSettings.frm"},
+    {"name": "frmModeSelect", "type": "Form", "file": "frmModeSelect.frm"},
+    {"name": "basConfig", "type": "Standard", "file": "basConfig.bas"},
+    {"name": "basMain", "type": "Standard", "file": "basMain.bas"},
+    {"name": "basUtility", "type": "Standard", "file": "basUtility.bas"},
+    {"name": "clsAppEvents", "type": "Class", "file": "clsAppEvents.cls"},
+    {"name": "cstSettings", "type": "Standard", "file": "cstSettings.bas"},
+    {"name": "basSync", "type": "Standard", "file": "basSync.bas"}
+  ]
+}

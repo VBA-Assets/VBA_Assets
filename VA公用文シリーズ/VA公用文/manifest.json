@@ -1,0 +1,16 @@
+{
+  "project": "VA_OfficialDocument",
+  "modules": [
+    {"name": "ThisDocument", "type": "Document", "file": "ThisDocument.bas"},
+    {"name": "clsSettingsManager", "type": "Class", "file": "clsSettingsManager.cls"},
+    {"name": "basSetup", "type": "Standard", "file": "basSetup.bas"},
+    {"name": "frmSetup", "type": "Form", "file": "frmSetup.frm"},
+    {"name": "basConvert", "type": "Standard", "file": "basConvert.bas"},
+    {"name": "basControl", "type": "Standard", "file": "basControl.bas"},
+    {"name": "clsPreFormatter", "type": "Class", "file": "clsPreFormatter.cls"},
+    {"name": "clsVariablesManager", "type": "Class", "file": "clsVariablesManager.cls"},
+    {"name": "clsListFormatter", "type": "Class", "file": "clsListFormatter.cls"},
+    {"name": "basIndent", "type": "Standard", "file": "basIndent.bas"},
+    {"name": "cstSettings", "type": "Standard", "file": "cstSettings.bas"}
+  ]
+}

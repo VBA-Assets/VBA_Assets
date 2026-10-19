@@ -1,0 +1,12 @@
+{
+  "project": "VA_FileStorage",
+  "modules": [
+    {"name": "ThisWorkbook", "type": "Document", "file": "ThisWorkbook.bas"},
+    {"name": "Sht1Hokan", "type": "Document", "file": "Sht1Hokan.bas"},
+    {"name": "Sht2Hokansaki", "type": "Document", "file": "Sht2Hokansaki.bas"},
+    {"name": "ShtOption", "type": "Document", "file": "ShtOption.bas"},
+    {"name": "ShtManual", "type": "Document", "file": "ShtManual.bas"},
+    {"name": "Setup", "type": "Standard", "file": "Setup.bas"},
+    {"name": "Evnt", "type": "Class", "file": "Evnt.cls"}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "project": "VA_Security",
+  "modules": [
+    {"name": "ThisDocument", "type": "Document", "file": "ThisDocument.bas"},
+    {"name": "sanitize", "type": "Standard", "file": "sanitize.bas"}
+  ]
+}

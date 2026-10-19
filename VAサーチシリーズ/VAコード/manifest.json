@@ -1,0 +1,13 @@
+{
+  "project": "VAコード",
+  "modules": [
+    {"name": "ThisWorkbook", "type": "Document", "file": "ThisWorkbook.bas"},
+    {"name": "Sheet1", "type": "Document", "file": "Sheet1.bas"},
+    {"name": "basMain", "type": "Standard", "file": "basMain.bas"},
+    {"name": "basExport", "type": "Standard", "file": "basExport.bas"},
+    {"name": "basImport", "type": "Standard", "file": "basImport.bas"},
+    {"name": "basUtility", "type": "Standard", "file": "basUtility.bas"},
+    {"name": "basJson", "type": "Standard", "file": "basJson.bas"},
+    {"name": "frmStartMenu", "type": "Form", "file": "frmStartMenu.frm"}
+  ]
+}

@@ -1,0 +1,40 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui"
+          xmlns:va="VA_Shared_Namespace">
+  <ribbon>
+    <tabs>
+      <tab idQ="va:tabVA" label="VA">
+        <group id="grpPseudonymize" label="VA仮名化">
+          <!-- 並びは VA公用文（マークダウン・ニュートラル・アウトライン｜セットアップ）にそろえ、
+               文書全体の変換（実名・仮名）を左に、区切り線の右に選んだ語の操作を置く。
+               実名・仮名のアイコンは、同じ系列（文書に印）の絵にする（2026-10-17 班長指示） -->
+
+          <!-- 実名ボタン（文書の記号を実名に戻す） -->
+          <button id="btnRestore"
+                  label="実名"
+                  size="large"
+                  imageMso="ReviewAcceptChange"
+                  supertip="文書の記号（〔人名Ａ〕など）を、元の語（実名）に戻します。AIの回答は、この文書に貼り付けてから押してください。"
+                  onAction="rxRestore"/>
+
+          <!-- 仮名ボタン（これまでに仮名化した語を、文書全体で記号にする） -->
+          <button id="btnPseudonymize"
+                  label="仮名"
+                  size="large"
+                  imageMso="ReviewRejectChange"
+                  supertip="これまでに仮名化した語を、文書の中ですべて〔人名Ａ〕のような記号に置き換えます。実名に戻した後や、文章を書き足した後に、もう一度仮名化するときに使います。"
+                  onAction="rxPseudonymize"/>
+
+          <separator id="sepPseudonymize"/>
+
+          <!-- 選んだ語を仮名化ボタン（種別はフォームで選ぶ） -->
+          <button id="btnRegisterWord"
+                  label="選んだ語を仮名化"
+                  size="large"
+                  imageMso="ReviewNewComment"
+                  supertip="文書の中で選んだ語を、すぐ〔人名Ａ〕のような記号に置き換えます（仮名化）。種別は、表示される画面で選びます。仮名化した語（または記号）を選んで押すと、仮名化を解除して元の語に戻します。"
+                  onAction="rxRegisterWord"/>
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

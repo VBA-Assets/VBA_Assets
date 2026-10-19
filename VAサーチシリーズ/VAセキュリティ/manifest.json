@@ -1,0 +1,8 @@
+{
+  "project": "VA_Security",
+  "modules": [
+    {"name": "ThisWorkbook", "type": "Document", "file": "ThisWorkbook.bas"},
+    {"name": "Sheet1", "type": "Document", "file": "Sheet1.bas"},
+    {"name": "basSanitize", "type": "Standard", "file": "basSanitize.bas"}
+  ]
+}

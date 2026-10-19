@@ -1,0 +1,15 @@
+{
+  "project": "VA_CaseDatabase",
+  "modules": [
+    {"name": "ThisWorkbook", "type": "Document", "file": "ThisWorkbook.bas"},
+    {"name": "sht11", "type": "Document", "file": "sht11.bas"},
+    {"name": "shtOpt", "type": "Document", "file": "shtOpt.bas"},
+    {"name": "shtMan", "type": "Document", "file": "shtMan.bas"},
+    {"name": "sht12", "type": "Document", "file": "sht12.bas"},
+    {"name": "shtFldr", "type": "Document", "file": "shtFldr.bas"},
+    {"name": "Setup", "type": "Standard", "file": "Setup.bas"},
+    {"name": "Fldr_backup", "type": "Class", "file": "Fldr_backup.cls"},
+    {"name": "Evnt", "type": "Class", "file": "Evnt.cls"},
+    {"name": "Fldr", "type": "Class", "file": "Fldr.cls"}
+  ]
+}

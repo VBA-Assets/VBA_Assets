@@ -1,0 +1,12 @@
+{
+  "project": "VA_Style",
+  "modules": [
+    {"name": "ThisDocument", "type": "Document", "file": "ThisDocument.bas"},
+    {"name": "basConfigStyle", "type": "Standard", "file": "basConfigStyle.bas"},
+    {"name": "Settings", "type": "Standard", "file": "Settings.bas"},
+    {"name": "VariablesManager", "type": "Class", "file": "VariablesManager.cls"},
+    {"name": "frmStyleOption", "type": "Form", "file": "frmStyleOption.frm"},
+    {"name": "SettingsManager", "type": "Class", "file": "SettingsManager.cls"},
+    {"name": "basControl", "type": "Standard", "file": "basControl.bas"}
+  ]
+}

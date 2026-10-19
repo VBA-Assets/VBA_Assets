@@ -1,0 +1,12 @@
+{
+  "project": "VA_PhoneMemo",
+  "modules": [
+    {"name": "ThisWorkbook", "type": "Document", "file": "ThisWorkbook.bas"},
+    {"name": "sht11", "type": "Document", "file": "sht11.bas"},
+    {"name": "shtOpt", "type": "Document", "file": "shtOpt.bas"},
+    {"name": "shtMan", "type": "Document", "file": "shtMan.bas"},
+    {"name": "Setup", "type": "Standard", "file": "Setup.bas"},
+    {"name": "Mail", "type": "Standard", "file": "Mail.bas"},
+    {"name": "Evnt", "type": "Class", "file": "Evnt.cls"}
+  ]
+}

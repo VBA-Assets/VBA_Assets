@@ -1,0 +1,10 @@
+{
+  "project": "VA_Connector",
+  "modules": [
+    {"name": "Connect", "type": "Standard", "file": "Connect.bas"},
+    {"name": "ThisWorkbook", "type": "Document", "file": "ThisWorkbook.bas"},
+    {"name": "Sheet1", "type": "Document", "file": "Sheet1.bas"},
+    {"name": "DrawConnect", "type": "Form", "file": "DrawConnect.frm"},
+    {"name": "Setting", "type": "Standard", "file": "Setting.bas"}
+  ]
+}

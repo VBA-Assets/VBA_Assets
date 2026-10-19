@@ -1,0 +1,11 @@
+{
+  "project": "VA_Search",
+  "modules": [
+    {"name": "ThisWorkbook", "type": "Document", "file": "ThisWorkbook.bas"},
+    {"name": "SearchForm", "type": "Form", "file": "SearchForm.frm"},
+    {"name": "SearchAddin_Main", "type": "Standard", "file": "SearchAddin_Main.bas"},
+    {"name": "SearchLogic", "type": "Class", "file": "SearchLogic.cls"},
+    {"name": "Sheet1", "type": "Document", "file": "Sheet1.bas"},
+    {"name": "Settings", "type": "Standard", "file": "Settings.bas"}
+  ]
+}

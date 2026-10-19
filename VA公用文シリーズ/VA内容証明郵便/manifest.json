@@ -1,0 +1,8 @@
+{
+  "project": "VA_ContentCcertifiedMmail",
+  "modules": [
+    {"name": "ThisDocument", "type": "Document", "file": "ThisDocument.bas"},
+    {"name": "basCheck", "type": "Standard", "file": "basCheck.bas"},
+    {"name": "Setting", "type": "Standard", "file": "Setting.bas"}
+  ]
+}

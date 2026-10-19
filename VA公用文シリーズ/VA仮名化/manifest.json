@@ -1,0 +1,10 @@
+{
+  "project": "VA_Pseudonymize",
+  "modules": [
+    {"name": "ThisDocument", "type": "Document", "file": "ThisDocument.bas"},
+    {"name": "cstSettings", "type": "Standard", "file": "cstSettings.bas"},
+    {"name": "basDictionary", "type": "Standard", "file": "basDictionary.bas"},
+    {"name": "basPseudonymize", "type": "Standard", "file": "basPseudonymize.bas"},
+    {"name": "frmTokenType", "type": "Form", "file": "frmTokenType.frm"}
+  ]
+}

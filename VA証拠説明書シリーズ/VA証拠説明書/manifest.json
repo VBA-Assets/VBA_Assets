@@ -1,0 +1,7 @@
+{
+  "project": "EvidenceExplanation",
+  "modules": [
+    {"name": "ThisDocument", "type": "Document", "file": "ThisDocument.bas"},
+    {"name": "frmMergeSplit", "type": "Form", "file": "frmMergeSplit.frm"}
+  ]
+}

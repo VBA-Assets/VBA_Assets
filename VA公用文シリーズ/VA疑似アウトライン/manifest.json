@@ -1,0 +1,14 @@
+{
+  "project": "VA_FakeOutline",
+  "modules": [
+    {"name": "ThisDocument", "type": "Document", "file": "ThisDocument.bas"},
+    {"name": "frmConversionOption", "type": "Form", "file": "frmConversionOption.frm"},
+    {"name": "Settings", "type": "Standard", "file": "Settings.bas"},
+    {"name": "VariablesManager", "type": "Class", "file": "VariablesManager.cls"},
+    {"name": "SettingsManager", "type": "Class", "file": "SettingsManager.cls"},
+    {"name": "basConvertToFakeOutline", "type": "Standard", "file": "basConvertToFakeOutline.bas"},
+    {"name": "basConvertToMarkdown", "type": "Standard", "file": "basConvertToMarkdown.bas"},
+    {"name": "clsPreFormatter", "type": "Class", "file": "clsPreFormatter.cls"},
+    {"name": "basControl", "type": "Standard", "file": "basControl.bas"}
+  ]
+}
