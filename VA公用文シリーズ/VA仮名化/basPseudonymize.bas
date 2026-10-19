@@ -78,9 +78,9 @@ Sub Pseudonymize()
     '--- メイン処理 ---
     '語の長い順の並びを求める
     lngOrder = SortByLengthDesc(strWords, lngCount)
-    '長い語から順に、語を記号に置き換える
+    '長い語から順に、語を記号（赤字）に置き換える
     For i = 1 To lngCount
-        Call ReplaceAllInBody(doc, strWords(lngOrder(i)), strTokens(lngOrder(i)))
+        Call ReplaceAllInBody(doc, strWords(lngOrder(i)), strTokens(lngOrder(i)), lngTokenColor)
     Next i
     blnDone = True
 
@@ -277,8 +277,8 @@ Sub RegisterSelectedWord()
     Call BeginProcess(doc, "選んだ語の仮名化")
     '辞書に追加する
     strToken = basDictionary.AddEntry(doc, strType, strText)
-    '文書のその語を、すぐ記号に置き換える
-    Call ReplaceAllInBody(doc, strText, strToken)
+    '文書のその語を、すぐ記号（赤字）に置き換える
+    Call ReplaceAllInBody(doc, strText, strToken, lngTokenColor)
     strStatus = "「" & strText & "」を " & strToken & " に仮名化しました。"
 
 Cleanup:
@@ -340,21 +340,23 @@ End Function
 Private Sub RestoreToken(ByVal doc As Document, ByVal strToken As String, ByVal strWord As String)
     Dim strNarrow As String ' 英字を半角にした記号
 
-    '記号を元の語に置き換える
-    Call ReplaceAllInBody(doc, strToken, strWord)
+    '記号を元の語に置き換える（文字の色は「自動」に戻す）
+    Call ReplaceAllInBody(doc, strToken, strWord, wdColorAutomatic)
     '英字を半角にした記号も、元の語に置き換える
     strNarrow = basDictionary.ToNarrowLetters(strToken)
-    If strNarrow <> strToken Then Call ReplaceAllInBody(doc, strNarrow, strWord)
+    If strNarrow <> strToken Then Call ReplaceAllInBody(doc, strNarrow, strWord, wdColorAutomatic)
 End Sub
 
 '================================================================================
 ' 機能:         文書の本文（表を含む）の文字列を、すべて置き換えます。
-'               書式は検索・置換の対象にせず、文字列だけを完全一致で置き換えます。
+'               書式は検索の条件にせず、文字列だけを完全一致で検索します。
+'               置き換えた文字列には、指定した文字の色だけを付けます（ほかの書式は元のまま）。
 ' 引数:         doc - 対象の文書
 '               strFind - 検索する文字列
 '               strReplace - 置き換える文字列
+'               lngColor - 置き換えた文字列の文字の色（記号は lngTokenColor、実名に戻した語は wdColorAutomatic）
 '================================================================================
-Private Sub ReplaceAllInBody(ByVal doc As Document, ByVal strFind As String, ByVal strReplace As String)
+Private Sub ReplaceAllInBody(ByVal doc As Document, ByVal strFind As String, ByVal strReplace As String, ByVal lngColor As Long)
     Dim rng As Range ' 検索の範囲
 
     '本文全体を範囲にする
@@ -366,10 +368,13 @@ Private Sub ReplaceAllInBody(ByVal doc As Document, ByVal strFind As String, ByV
         '検索・置換の文字列（「^」は特殊文字の記号のため「^^」にする）
         .Text = Replace(strFind, "^", "^^")
         .Replacement.Text = Replace(strReplace, "^", "^^")
-        '文字列だけを完全一致で検索する
+        '置き換えた文字列の文字の色
+        .Replacement.Font.Color = lngColor
+        '文字列だけを完全一致で検索する（置き換えの書式（文字の色）を使うため、Format は True にする。
+        '検索の書式は消してあるので、検索の条件にはならない）
         .Forward = True
         .Wrap = wdFindStop
-        .Format = False
+        .Format = True
         .MatchCase = True
         .MatchWholeWord = False
         .MatchWildcards = False
