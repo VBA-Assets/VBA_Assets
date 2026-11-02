@@ -33,6 +33,10 @@ Private Const lngWideA As Long = &HFF21& ' 全角の「Ａ」
 Private Const lngWideZ As Long = &HFF3A& ' 全角の「Ｚ」
 Private Const lngNarrowA As Long = &H41& ' 半角の「A」
 Private Const lngNarrowZ As Long = &H5A& ' 半角の「Z」
+Private Const lngWideSmallA As Long = &HFF41& ' 全角の「ａ」
+Private Const lngWideSmallZ As Long = &HFF5A& ' 全角の「ｚ」
+Private Const lngNarrowSmallA As Long = &H61& ' 半角の「a」
+Private Const lngNarrowSmallZ As Long = &H7A& ' 半角の「z」
 
 '================================================================================
 ' 辞書の読み書き
@@ -79,7 +83,7 @@ End Function
 
 '================================================================================
 ' 機能:         指定した文字列が、登録済みの語または記号かどうかを調べます。
-'               記号は、英字が半角になったもの（〔人名A〕）も同じ記号とみなします。
+'               記号は、英字が半角・小文字になったもの（〔人名A〕〔人名a〕）も同じ記号とみなします。
 ' 引数:         doc - 対象の文書
 '               strText - 調べる文字列
 '               strToken, strWord, strVarName - 見つかった項目の記号・語・文書変数の名前（戻り値）
@@ -99,7 +103,7 @@ Public Function FindEntry(ByVal doc As Document, ByVal strText As String, ByRef 
     'すべての項目を繰り返す
     For i = 1 To lngCount
         '語または記号が一致する場合
-        If strWords(i) = strText Or strTokens(i) = ToWideLetters(strText) Then
+        If strWords(i) = strText Or strTokens(i) = ToWideCapitalLetters(strText) Then
             strToken = strTokens(i)
             strWord = strWords(i)
             strVarName = strVarNames(i)
@@ -340,7 +344,8 @@ End Function
 
 '================================================================================
 ' 機能:         文字列の中の記号（辞書にないものを含む）の数を数えます。
-'               記号は、英字が半角になったもの（〔人名A〕）も数えます。
+'               記号は、英字が半角・小文字になったもの（〔人名A〕〔人名a〕〔人名ａ〕）や、
+'               全角と半角が混ざったもの（〔人名ＡA〕）も数えます（戻せなかった記号を知らせ漏らさないため）。
 ' 引数:         strText - 対象の文字列
 ' 戻り値:       記号の数
 '================================================================================
@@ -370,7 +375,7 @@ End Function
 
 '================================================================================
 ' 機能:         記号を種別と英字の番号に分けます。
-'               英字が半角になったもの（〔人名A〕）も記号とみなします。
+'               英字が半角・小文字になったもの（〔人名A〕〔人名a〕〔人名ａ〕）も記号とみなします。
 ' 引数:         strToken - 記号（例：〔人名Ａ〕）
 '               strType - 種別（戻り値。例：人名）
 '               lngNumber - 英字の番号（戻り値。Ａ=1、Ｚ=26、ＡＡ=27）
@@ -396,7 +401,7 @@ Public Function GetTokenParts(ByVal strToken As String, ByRef strType As String,
         '種別で始まる場合
         If Left(strInner, Len(varTypes(i))) = varTypes(i) Then
             '残りが英字だけの場合は記号とみなす
-            lngNumber = LettersToNumber(ToWideLetters(Mid(strInner, Len(varTypes(i)) + 1)))
+            lngNumber = LettersToNumber(ToWideCapitalLetters(Mid(strInner, Len(varTypes(i)) + 1)))
             If lngNumber > 0 Then
                 strType = varTypes(i)
                 GetTokenParts = True
@@ -430,6 +435,35 @@ Public Function ToNarrowLetters(ByVal strText As String) As String
     Next i
 
     ToNarrowLetters = strResult
+End Function
+
+'================================================================================
+' 機能:         記号の英字を小文字にした文字列を返します（例：〔人名Ａ〕→〔人名ａ〕、〔人名A〕→〔人名a〕）。
+'               全角・半角は変えません。AIが英字を小文字にして出力した記号を戻すために使います。
+' 引数:         strText - 対象の文字列
+' 戻り値:       英字の大文字を小文字にした文字列
+'================================================================================
+Public Function ToSmallLetters(ByVal strText As String) As String
+    Dim i As Long
+    Dim lngCode As Long ' 文字コード
+    Dim strResult As String ' 結果
+
+    strResult = ""
+    '1文字ずつ繰り返す
+    For i = 1 To Len(strText)
+        lngCode = CharCode(Mid(strText, i, 1))
+        '全角の英字の大文字の場合は、全角の小文字にする
+        If lngCode >= lngWideA And lngCode <= lngWideZ Then
+            strResult = strResult & ChrW(lngCode - lngWideA + lngWideSmallA)
+        '半角の英字の大文字の場合は、半角の小文字にする
+        ElseIf lngCode >= lngNarrowA And lngCode <= lngNarrowZ Then
+            strResult = strResult & ChrW(lngCode - lngNarrowA + lngNarrowSmallA)
+        Else
+            strResult = strResult & Mid(strText, i, 1)
+        End If
+    Next i
+
+    ToSmallLetters = strResult
 End Function
 
 '================================================================================
@@ -608,6 +642,37 @@ Private Function ToWideLetters(ByVal strText As String) As String
     Next i
 
     ToWideLetters = strResult
+End Function
+
+'================================================================================
+' 機能:         英字（半角・全角の大文字と小文字）を、全角の大文字にした文字列を返します
+'               （例：〔人名A〕〔人名a〕〔人名ａ〕→〔人名Ａ〕）。記号かどうかを判定するために使います。
+'               （登録できる語の判定（OverlapsToken）には使いません。「Smith」のような小文字を含む語が、
+'                 英字だけの語とみなされて登録できなくなるため）
+'================================================================================
+Private Function ToWideCapitalLetters(ByVal strText As String) As String
+    Dim i As Long
+    Dim lngCode As Long ' 文字コード
+    Dim strResult As String ' 結果
+
+    strResult = ""
+    For i = 1 To Len(strText)
+        lngCode = CharCode(Mid(strText, i, 1))
+        '半角の英字（大文字）の場合は、全角の大文字にする
+        If lngCode >= lngNarrowA And lngCode <= lngNarrowZ Then
+            strResult = strResult & ChrW(lngCode - lngNarrowA + lngWideA)
+        '半角の英字（小文字）の場合は、全角の大文字にする
+        ElseIf lngCode >= lngNarrowSmallA And lngCode <= lngNarrowSmallZ Then
+            strResult = strResult & ChrW(lngCode - lngNarrowSmallA + lngWideA)
+        '全角の英字（小文字）の場合は、全角の大文字にする
+        ElseIf lngCode >= lngWideSmallA And lngCode <= lngWideSmallZ Then
+            strResult = strResult & ChrW(lngCode - lngWideSmallA + lngWideA)
+        Else
+            strResult = strResult & Mid(strText, i, 1)
+        End If
+    Next i
+
+    ToWideCapitalLetters = strResult
 End Function
 
 '================================================================================

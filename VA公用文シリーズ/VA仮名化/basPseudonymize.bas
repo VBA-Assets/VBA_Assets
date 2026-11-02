@@ -110,7 +110,7 @@ End Sub
 
 '================================================================================
 ' 機能:         文書の本文の記号を、登録した語に戻します。
-'               英字が半角になった記号（〔人名A〕）も戻します。
+'               英字が半角・小文字になった記号（〔人名A〕〔人名a〕）も戻します。
 '               戻せなかった記号（辞書にない記号など）があれば、その件数を知らせます。
 '               仮名化中でない文書でも実行できます（AIの出力を後から貼った場合のため）。
 '================================================================================
@@ -332,7 +332,10 @@ Private Function StoreDictionary(ByVal doc As Document) As Boolean
     On Error GoTo 0
 End Function
 '================================================================================
-' 機能:         記号を元の語に戻します。英字が半角になった記号（〔人名A〕）も戻します。
+' 機能:         記号を元の語に戻します。英字が半角・小文字になった記号（〔人名A〕〔人名a〕〔人名ａ〕）も戻します。
+'               （全角と半角が混ざった記号（〔人名ＡA〕）は戻しません。戻せなかった記号として数えて知らせます）
+'               大文字と小文字は区別して検索します（区別しないと、Word が見つけた記号に合わせて、
+'               置き換えた語の英字を大文字にすることがあるため）。
 ' 引数:         doc - 対象の文書
 '               strToken - 記号
 '               strWord - 元の語
@@ -342,9 +345,15 @@ Private Sub RestoreToken(ByVal doc As Document, ByVal strToken As String, ByVal 
 
     '記号を元の語に置き換える（文字の色は「自動」に戻す）
     Call ReplaceAllInBody(doc, strToken, strWord, wdColorAutomatic)
+    '英字を小文字にした記号も、元の語に置き換える
+    Call ReplaceAllInBody(doc, basDictionary.ToSmallLetters(strToken), strWord, wdColorAutomatic)
     '英字を半角にした記号も、元の語に置き換える
     strNarrow = basDictionary.ToNarrowLetters(strToken)
-    If strNarrow <> strToken Then Call ReplaceAllInBody(doc, strNarrow, strWord, wdColorAutomatic)
+    If strNarrow <> strToken Then
+        Call ReplaceAllInBody(doc, strNarrow, strWord, wdColorAutomatic)
+        '英字を半角の小文字にした記号も、元の語に置き換える
+        Call ReplaceAllInBody(doc, basDictionary.ToSmallLetters(strNarrow), strWord, wdColorAutomatic)
+    End If
 End Sub
 
 '================================================================================
