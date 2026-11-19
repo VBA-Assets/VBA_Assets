@@ -1,8 +1,9 @@
 {
-  "project": "VB_Dividened",
+  "project": "VA_Dividend",
   "modules": [
     {"name": "ThisWorkbook", "type": "Document", "file": "ThisWorkbook.bas"},
     {"name": "Sheet1", "type": "Document", "file": "Sheet1.bas"},
+    {"name": "cstSettings", "type": "Standard", "file": "cstSettings.bas"},
     {"name": "mdlDividendCalc", "type": "Standard", "file": "mdlDividendCalc.bas"},
     {"name": "frmDividendCalc", "type": "Form", "file": "frmDividendCalc.frm"}
   ]

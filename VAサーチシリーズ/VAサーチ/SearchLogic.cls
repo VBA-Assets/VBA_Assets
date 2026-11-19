@@ -78,7 +78,7 @@ Function ApplySearchAndHide(rngData As Range, strText As String, strMode As Stri
             strSearchSeireki = ""
             strSearchWareki = ""
             
-            If Settings.ENABLE_SMART_DATE_SEARCH Then
+            If cstSettings.ENABLE_SMART_DATE_SEARCH Then
                 If IsDate(strSearch) Then
                     lngSearch = Int(CDbl(CDate(strSearch))) ' シリアル値
                     strSearchSeireki = Format(DateValue(strSearch), "yyyy/m/d")
@@ -107,7 +107,7 @@ Function ApplySearchAndHide(rngData As Range, strText As String, strMode As Stri
                         End If
                         
                         ' 2. 日付としての一致 (Settings参照)
-                        If Settings.ENABLE_SMART_DATE_SEARCH Then
+                        If cstSettings.ENABLE_SMART_DATE_SEARCH Then
                             If lngSearch <> 0 Then
                                 If IsDate(cellVal) Then
                                     If Int(CDbl(CDate(cellVal))) = lngSearch Then
@@ -193,7 +193,7 @@ Private Function NormalizeString(ByVal strInput As String) As String
     s = strInput
     
     ' --- 1. 異字体を区別しない設定の場合 (Settings参照) ---
-    If Settings.ENABLE_IGNORE_VARIANT_CHAR Then
+    If cstSettings.ENABLE_IGNORE_VARIANT_CHAR Then
         ' (A) IVS (Ideographic Variation Sequence) の除去
         If InStr(s, ChrW(&HDB40)) > 0 Then
             Dim i As Long
@@ -281,17 +281,17 @@ Private Function NormalizeString(ByVal strInput As String) As String
     ' 以下のいずれかの日本語正規化オプションが有効な場合、
     ' 一旦「全角カタカナ」→「半角」に変換することで、
     ' 濁点分離や小書き文字の処理を確実に実行できるようにします。
-    If Settings.ENABLE_IGNORE_KANA_TYPE Or _
-       Settings.ENABLE_IGNORE_DAKUTEN Or _
-       Settings.ENABLE_IGNORE_SMALL_KANA Or _
-       Settings.ENABLE_IGNORE_CHOON Or _
-       Settings.ENABLE_IGNORE_WIDTH_CASE Then
+    If cstSettings.ENABLE_IGNORE_KANA_TYPE Or _
+       cstSettings.ENABLE_IGNORE_DAKUTEN Or _
+       cstSettings.ENABLE_IGNORE_SMALL_KANA Or _
+       cstSettings.ENABLE_IGNORE_CHOON Or _
+       cstSettings.ENABLE_IGNORE_WIDTH_CASE Then
        
         ' (1) カナ種統一が有効、または濁点等の処理が必要な場合はカタカナに寄せる
-        If Settings.ENABLE_IGNORE_KANA_TYPE Or _
-           Settings.ENABLE_IGNORE_DAKUTEN Or _
-           Settings.ENABLE_IGNORE_SMALL_KANA Or _
-           Settings.ENABLE_IGNORE_CHOON Then
+        If cstSettings.ENABLE_IGNORE_KANA_TYPE Or _
+           cstSettings.ENABLE_IGNORE_DAKUTEN Or _
+           cstSettings.ENABLE_IGNORE_SMALL_KANA Or _
+           cstSettings.ENABLE_IGNORE_CHOON Then
             s = StrConv(s, vbKatakana)
         End If
         
@@ -299,20 +299,20 @@ Private Function NormalizeString(ByVal strInput As String) As String
         s = StrConv(s, vbNarrow)
         
         ' (3) 大文字小文字の区別なし設定なら大文字化
-        If Settings.ENABLE_IGNORE_WIDTH_CASE Then
+        If cstSettings.ENABLE_IGNORE_WIDTH_CASE Then
             s = UCase(s)
         End If
     End If
 
     ' --- 3. 濁点・半濁点の除去 ---
-    If Settings.ENABLE_IGNORE_DAKUTEN Then
+    If cstSettings.ENABLE_IGNORE_DAKUTEN Then
         ' 半角カタカナの濁点(ﾞ)・半濁点(ﾟ)を除去
         s = Replace(s, Chr(222), "")
         s = Replace(s, Chr(223), "")
     End If
     
     ' --- 4. 小書き文字を区別しない ---
-    If Settings.ENABLE_IGNORE_SMALL_KANA Then
+    If cstSettings.ENABLE_IGNORE_SMALL_KANA Then
         ' 半角カタカナの小書きを大文字に置換
         s = Replace(s, "ｧ", "ｱ")
         s = Replace(s, "ｨ", "ｲ")
@@ -328,7 +328,7 @@ Private Function NormalizeString(ByVal strInput As String) As String
     End If
 
     ' --- 5. 長音（ー）を区別しない ---
-    If Settings.ENABLE_IGNORE_CHOON Then
+    If cstSettings.ENABLE_IGNORE_CHOON Then
         ' 半角化済みなので、半角ハイフンと半角カナの長音を除去
         s = Replace(s, "-", "")       ' 半角マイナス/ハイフン
         s = Replace(s, Chr(176), "")  ' 半角カナの長音 (ｰ)

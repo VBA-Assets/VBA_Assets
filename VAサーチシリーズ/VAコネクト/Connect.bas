@@ -17,9 +17,9 @@ End Sub
 '---------------------------------------------------------------------------------
 ' プロシージャ名: ShowDrawConnectRibbon
 ' 概要: リボン上のボタンがクリックされた時に呼び出されるコールバック関数です。
-' 引数: control (IRibbonControl) - クリックされたボタンの情報
+' 引数: control - クリックされたボタン（参照設定に頼らないよう Object で受けます）
 '---------------------------------------------------------------------------------
-Sub ShowDrawConnectRibbon(control As IRibbonControl)
+Sub ShowDrawConnectRibbon(ByVal control As Object)
     '既存のフォーム表示プロシージャを呼び出す
     ShowDrawConnect
 End Sub
@@ -189,7 +189,7 @@ Sub AddConector(rngBegin, rngEnd, strType, strDirection, strStart, blnAlignElbow
         
         '線の種類が「点線 (Dash)」の場合
         If strType = "Dash" Then
-            '太さを設定値（Settingモジュールの定数）にする
+            '太さを設定値（cstSettingsモジュールの定数）にする
             .Weight = sngWeight
             '線のスタイルを点線にする
             .DashStyle = msoLineDash

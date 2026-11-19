@@ -116,6 +116,9 @@ Public Function GetProjectFileName(vbProj As Object) As String
             Exit Function
         End If
     Next wb
+    ' アドイン（xlam）は Application.Workbooks に入っていないので、プロジェクトのファイルの場所から名前を取る
+    ' （保存していないブックは場所がなく、エラーになるので、空のまま返す）
+    GetProjectFileName = GetFileNameFromPath(vbProj.fileName)
     On Error GoTo 0
 End Function
 

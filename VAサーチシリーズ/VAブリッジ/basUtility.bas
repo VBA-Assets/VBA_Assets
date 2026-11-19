@@ -238,3 +238,25 @@ Public Function IsShiftKeyPressed() As Boolean
         End If
     #End If
 End Function
+
+' -----------------------------------------------------------------------------
+' 機能: 対象のブックのほかに、保存していない変更のあるブックが開いているか判定する
+' 非表示のブック（個人用マクロブックなど）も含める。アドインは含めない。
+' Excel を終了する（Application.Quit）前に呼び、利用者の未保存のブックを失わないようにする
+' 引数: wbTarget - 閉じようとしているブック（判定から除く）
+' 戻り値: 未保存のブックがあれば True
+' -----------------------------------------------------------------------------
+Public Function HasOtherUnsavedBook(ByVal wbTarget As Workbook) As Boolean
+    ' ループ処理用のブック変数を宣言する
+    Dim wbLoop As Workbook
+    ' 開かれているすべてのブックを調べる
+    For Each wbLoop In Application.Workbooks
+        ' 対象のブックとアドインを除き、未保存の変更があるかを判定する
+        If Not (wbLoop Is wbTarget) And Not wbLoop.IsAddin Then
+            If Not wbLoop.Saved Then
+                HasOtherUnsavedBook = True
+                Exit Function
+            End If
+        End If
+    Next wbLoop
+End Function

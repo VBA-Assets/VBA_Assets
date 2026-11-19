@@ -1,0 +1,19 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" xmlns:va="VA_Shared_Namespace">
+  <ribbon>
+    <tabs>
+      <!-- カスタムタブ "VA" -->
+     <tab idQ="va:tabVA" label="VA">
+        <!-- グループ「コネクタ」を追加 -->
+        <group id="grpVAConnect" label="VAコネクト">
+          <!-- ボタン定義 -->
+          <button id="btnConnect" 
+                  label="カギ線追加" 
+                  imageMso="ConnectorTool" 
+                  size="large" 
+                  onAction="ShowDrawConnectRibbon" 
+                  supertip="カギ線描画フォームを表示します。家系図に適したカギ線を入力できます。" />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

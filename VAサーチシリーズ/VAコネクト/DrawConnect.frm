@@ -13,15 +13,18 @@ Option Explicit
 Private Sub CommandButton1_Click()
     '始点と終点のセル範囲を格納する変数を宣言する
     Dim rngBegin, rngEnd
-    
+
     'ユーザーが選択した設定（線種、方向、開始位置、角調整の有無）を格納する変数を宣言する
     Dim strType, strDirection, strStart, blnAlignElbow
-    
-    '現在選択されているオブジェクトが「セル範囲（Range）」でない場合はメッセージを表示して終了する
+
+    'エラーが起きたとき（保護されたシートで線を引けないときなど）は、番号と内容を表示する
+    On Error GoTo HandleErr
+
+'現在選択されているオブジェクトが「セル範囲（Range）」でない場合はメッセージを表示して終了する
     '（図形などを選択した状態で実行するのを防ぐため）
     If TypeName(Selection) <> "Range" Then
-        MsgBox "始点と終点のセルを選択してください"
-        Exit Sub
+        MsgBox "始点と終点のセルを選択してください。", vbExclamation, strAppTitle
+Exit Sub
     End If
     
     '選択されている範囲のアドレスをカンマ区切りで配列に分割して格納する
@@ -32,8 +35,8 @@ Private Sub CommandButton1_Click()
     '選択範囲が1箇所しかない（配列の要素数が0＝カンマがない）場合はメッセージを表示して終了する
     '（始点と終点の2箇所が選択されていないと線を引けないため）
     If UBound(varAddress) = 0 Then
-        MsgBox "始点と終点のセルを選択してください"
-        Exit Sub
+        MsgBox "始点と終点のセルを選択してください。", vbExclamation, strAppTitle
+Exit Sub
     End If
     
     '配列の1つ目（インデックス0）を始点のセル範囲として設定する
@@ -103,6 +106,11 @@ Private Sub CommandButton1_Click()
     'ConnectモジュールのAddConectorプロシージャを呼び出して、コネクタを作成する
     'ここまでに設定した変数（rngBegin, rngEnd, strType...）を引数として渡す
     Call Connect.AddConector(rngBegin, rngEnd, strType, strDirection, strStart, blnAlignElbow)
+    Exit Sub
+
+HandleErr:
+    MsgBox "カギ線を追加できませんでした。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
 End Sub
 
 '---------------------------------------------------------------------------------

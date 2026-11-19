@@ -102,20 +102,20 @@ Private Sub btnCalc_Click()
     Dim curResultTotal As Currency
     
     'エラーが発生した場合にエラー処理ルーチンへ飛ばす
-    On Error GoTo ErrorHandler
+    On Error GoTo HandleErr
 
     '--- 入力チェック ---
 
     '合計値セルが空欄かチェック
     If Me.txtTotalCell.Value = "" Then
-        MsgBox "合計値のセルを指定してください。", vbExclamation
-        Exit Sub
+        MsgBox "合計値のセルを指定してください。", vbExclamation, strAppTitle
+Exit Sub
     End If
     
     '配当率セルが空欄かチェック
     If Me.txtRateCell.Value = "" Then
-        MsgBox "配当率のセルを指定してください。", vbExclamation
-        Exit Sub
+        MsgBox "配当率のセルを指定してください。", vbExclamation, strAppTitle
+Exit Sub
     End If
 
     '入力された合計値のセル番地が正しいか確認し、オブジェクトにセットする
@@ -126,8 +126,8 @@ Private Sub btnCalc_Click()
     
     '目標金額が数値で入力されているか確認する（カンマ付きでもIsNumericはTrueになります）
     If Not IsNumeric(Me.txtTarget.Value) Then
-        MsgBox "目標金額には数値を入力してください。", vbExclamation
-        Exit Sub
+        MsgBox "目標金額には数値を入力してください。", vbExclamation, strAppTitle
+Exit Sub
     End If
     
     'フォームから目標値を読み込む（CCurはカンマ付き文字列も数値に変換します）
@@ -135,8 +135,8 @@ Private Sub btnCalc_Click()
     
     '最大桁数が数値で入力されているか確認する
     If Not IsNumeric(Me.txtMaxDigits.Value) Then
-        MsgBox "最大桁数には数値を入力してください。", vbExclamation
-        Exit Sub
+        MsgBox "最大桁数には数値を入力してください。", vbExclamation, strAppTitle
+Exit Sub
     End If
     
     'フォームから小数点以下の最大桁数を読み込む
@@ -144,8 +144,8 @@ Private Sub btnCalc_Click()
 
     '最大桁数が設定されていない（0以下）の場合には終了する
     If iMax <= 0 Then
-        MsgBox "最大桁数は1以上の整数を指定してください。"
-        Exit Sub
+        MsgBox "最大桁数は1以上の整数を指定してください。", vbExclamation, strAppTitle
+Exit Sub
     End If
 
     '--- 計算処理の呼び出し ---
@@ -162,19 +162,20 @@ Private Sub btnCalc_Click()
     '計算結果が目標値と一致するか確認する
     If curResultTotal = lngTarget Then
         '成功メッセージを表示する
-        MsgBox "解答が見つかりました。"
-    Else
+        MsgBox "解答が見つかりました。", vbInformation, strAppTitle
+Else
         '失敗メッセージを表示する
-        MsgBox "小数点以下" & iMax & "桁までの間に解答が見つかりませんでした。"
-        '（見つからなかった場合の配当率リセット処理はFunction内で行われています）
+        MsgBox "小数点以下" & iMax & "桁までの間に解答が見つかりませんでした。", vbInformation, strAppTitle
+'（見つからなかった場合の配当率リセット処理はFunction内で行われています）
     End If
     
     'サブルーチンを終了する
     Exit Sub
 
-'エラー処理ルーチン
-ErrorHandler:
-    MsgBox "エラーが発生しました: " & Err.Description, vbCritical
+'エラー処理ルーチン（セルの番地の誤りなど。番号と内容を表示する）
+HandleErr:
+    MsgBox "計算できませんでした。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
 End Sub
 
 '================================================================================

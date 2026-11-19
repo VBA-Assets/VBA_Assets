@@ -30,9 +30,9 @@ End Sub
 ' 機能:      リボンボタンからのコールバック
 ' 概要:      リボン上のボタンがクリックされたときに呼び出されます。
 '            Custom UI Editorなどで設定するonAction属性に対応します。
-' 引数:      control (IRibbonControl) - クリックされたリボンコントロールの情報
+' 引数:      control … 押されたボタン（参照設定に頼らないよう Object で受けます）
 '================================================================================
-Sub OnRibbonBtnClick(control As IRibbonControl)
+Sub OnRibbonBtnClick(ByVal control As Object)
     '既存のフォーム表示プロシージャを呼び出す
     ShowDividendCalcForm
 End Sub
@@ -60,12 +60,17 @@ Public Function CalcDivRate( _
     Dim jLower As Double
     '変数を設定する：配分率の小数点以下の数値の上限値
     Dim jUpper As Double
-    
+    '変数を設定する：処理の前の画面の更新の設定（後処理で、この値に戻す）
+    Dim blnSavedScreenUpdating As Boolean
+
+    '処理の前の画面の更新の設定を控える
+    blnSavedScreenUpdating = Application.ScreenUpdating
+
+    'エラーが発生した場合にエラー処理ルーチンへ飛ばす
+    On Error GoTo HandleErr
+
     '画面の更新を停止する（処理速度向上のため）
     Application.ScreenUpdating = False
-    
-    'エラーが発生した場合にエラー処理ルーチンへ飛ばす
-    On Error GoTo ErrorHandler
 
     '配分率の小数点以下の数値の下限値と上限値の初期値を設定する
     'この下限値と上限値は、次のFor～Next構文で計算の桁数が増えるたびに更新されるようになっています。
@@ -135,10 +140,7 @@ Public Function CalcDivRate( _
         End If
     '次の桁数へ
     Next i
-    
-    '画面の更新を再開する
-    Application.ScreenUpdating = True
-       
+
     '計算結果が目標値と一致するか確認する
     If lngResult <> lngTarget Then
         '見つからなかった場合、配当率を0に戻す
@@ -148,14 +150,20 @@ Public Function CalcDivRate( _
     
     '計算後の配当率を関数の戻り値として返す
     CalcDivRate = rngRate.Value
-    
+
+Cleanup:
+    '--- 後処理 ---
+    '途中で失敗しても、画面の更新を処理の前の設定に戻す
+    On Error Resume Next
+    Application.ScreenUpdating = blnSavedScreenUpdating
     Exit Function
 
-ErrorHandler:
-    '画面の更新を再開する
+HandleErr:
+    '画面の更新を再開してから、エラーの番号と内容を表示する
     Application.ScreenUpdating = True
-    'エラー内容を表示する
-    MsgBox "計算処理中にエラーが発生しました: " & Err.Description, vbCritical
+    MsgBox "計算の途中でエラーが起きました。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
     'エラー時は0を返す
     CalcDivRate = 0
+    Resume Cleanup
 End Function

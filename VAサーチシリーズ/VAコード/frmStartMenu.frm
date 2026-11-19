@@ -112,11 +112,9 @@ Private Sub UpdateFolderDisplay(proj As Object)
 
     If folderPath = "" Then
         lblFolderPath.Caption = "（未設定）"
-        lblFolderPath.ForeColor = RGB(180, 180, 180)
-    Else
+Else
         lblFolderPath.Caption = ShortenPath(folderPath)
-        lblFolderPath.ForeColor = RGB(80, 80, 80)
-    End If
+End If
 End Sub
 
 '--------------------------------------------------------------------------------
@@ -197,7 +195,7 @@ Private Sub CommandButton1_Click()
           "フォルダ: " & folderPath & vbCrLf & vbCrLf & _
           "全モジュールをファイルにエクスポートします。" & vbCrLf & _
           "よろしいですか？"
-    If MsgBox(msg, vbOKCancel + vbQuestion, "エクスポート確認") <> vbOK Then Exit Sub
+    If MsgBox(msg, vbOKCancel + vbQuestion, strAppTitle) <> vbOK Then Exit Sub
 
     If fName <> "" And fName <> "(未保存のブック)" Then
         basUtility.SaveAppSetting "LastSelectedProject", fName
@@ -235,7 +233,7 @@ Private Sub CommandButton2_Click()
 
     If Not basUtility.FileExists(folderPath & "manifest.json") Then
         MsgBox "manifest.json が見つかりません。" & vbCrLf & _
-               "フォルダ: " & folderPath, vbExclamation
+               "フォルダ: " & folderPath, vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -246,7 +244,7 @@ Private Sub CommandButton2_Click()
     Set modules = basJson.ParseManifestModules(manifestStr)
 
     If modules.Count = 0 Then
-        MsgBox "インポート可能なモジュールが見つかりません。", vbExclamation
+        MsgBox "インポート可能なモジュールが見つかりません。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -279,7 +277,7 @@ Private Sub CommandButton2_Click()
           "※警告: 既存の同名モジュールは上書きされます。" & vbCrLf & _
           "実行してよろしいですか？"
 
-    If MsgBox(msg, vbOKCancel + vbExclamation + vbDefaultButton2, "インポート実行の最終確認") <> vbOK Then
+    If MsgBox(msg, vbOKCancel + vbQuestion + vbDefaultButton2, strAppTitle) <> vbOK Then
         Exit Sub
     End If
 
@@ -297,7 +295,7 @@ End Sub
 '--------------------------------------------------------------------------------
 Private Function GetSelectedProject() As Object
     If cboProjectList.ListIndex = -1 Then
-        MsgBox "プロジェクトを選択してください。", vbExclamation
+        MsgBox "プロジェクトを選択してください。", vbExclamation, strAppTitle
         Set GetSelectedProject = Nothing
         Exit Function
     End If

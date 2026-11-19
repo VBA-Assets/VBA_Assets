@@ -19,7 +19,7 @@ Public Sub ExportModulesToFiles(ByVal TargetProj As Object, ByVal FolderPath As 
     On Error GoTo ErrorHandler
 
     If TargetProj Is Nothing Then
-        MsgBox "対象プロジェクトが指定されていません。", vbExclamation
+        MsgBox "対象プロジェクトが指定されていません。", vbExclamation, strAppTitle
         Exit Sub
     End If
     Set vbProj = TargetProj
@@ -82,9 +82,9 @@ Public Sub ExportModulesToFiles(ByVal TargetProj As Object, ByVal FolderPath As 
     basUtility.WriteTextFileUTF8 FolderPath & "manifest.json", manifestStr
 
     MsgBox exportCount & " 個のモジュールをエクスポートしました。" & vbCrLf & _
-           "フォルダ: " & FolderPath, vbInformation, "エクスポート完了"
+           "フォルダ: " & FolderPath, vbInformation, strAppTitle
     Exit Sub
 
 ErrorHandler:
-    MsgBox "エクスポート中にエラーが発生しました。" & vbCrLf & Err.Description, vbCritical
+    MsgBox "エクスポート中にエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, strAppTitle
 End Sub

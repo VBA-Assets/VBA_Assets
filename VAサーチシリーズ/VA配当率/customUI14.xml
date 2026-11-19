@@ -1,0 +1,19 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" xmlns:va="VA_Shared_Namespace">
+  <ribbon>
+    <tabs>
+      <!-- カスタムタブ "VA" -->
+     <tab idQ="va:tabVA" label="VA">
+        <!-- グループを追加 -->
+        <group id="grpDividendCalc" label="VA配当率">
+          <!-- ボタンを追加 -->
+          <button id="btnShowForm" 
+                  label="配当率計算" 
+                  imageMso="Calculator" 
+                  size="large" 
+                  onAction="OnRibbonBtnClick" 
+                  supertip="配当率計算フォームを表示します。配当金の合計値が目標値に一致する配当率を計算できます。"/>
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

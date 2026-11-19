@@ -119,7 +119,7 @@ Public Function loadFromMaster(ByVal TargetBook As Workbook, ByVal isSilent As B
     ' マスタパスが未設定または存在しないか判定する
     If strMasterPath = "" Or Not basUtility.FileExists(strMasterPath) Then
         ' エラーメッセージを表示する
-        If Not isSilent Then MsgBox "マスタファイルが見つかりません。" & vbCrLf & "パス: " & strMasterPath, vbCritical, cstSettings.MSG_TITLE
+        If Not isSilent Then MsgBox "マスタファイルが見つかりません。" & vbCrLf & "パス: " & strMasterPath, vbExclamation, strAppTitle
         ' 関数を終了して抜ける
         Exit Function
     ' 存在判定の終了
@@ -131,7 +131,7 @@ Public Function loadFromMaster(ByVal TargetBook As Workbook, ByVal isSilent As B
             ' ユーザーの選択結果を格納する変数を宣言する
             Dim intReloadAns As VbMsgBoxResult
             ' 書き込み確認のメッセージを表示し結果を取得する
-            intReloadAns = MsgBox("編集中のデータがマスタへ書き込まれていません。" & vbCrLf & "再読み込みする前にマスタファイルへデータを書き込みますか？", vbYesNoCancel + vbQuestion, cstSettings.MSG_TITLE)
+            intReloadAns = MsgBox("編集中のデータがマスタへ書き込まれていません。" & vbCrLf & "再読み込みする前にマスタファイルへデータを書き込みますか？", vbYesNoCancel + vbQuestion, strAppTitle)
 
             ' ユーザーの選択結果に応じて処理を分岐する
             Select Case intReloadAns
@@ -177,7 +177,7 @@ Public Function loadFromMaster(ByVal TargetBook As Workbook, ByVal isSilent As B
             ' ユーザーの確認結果を格納する変数を宣言する
             Dim intConfirmAns As VbMsgBoxResult
             ' 閲覧モードで開く旨を通知し結果を取得する
-            intConfirmAns = MsgBox("現在、ユーザー [" & strLockUser & "] が編集中です。" & vbCrLf & "閲覧モード(読み取り専用)でデータを読み込みます。", vbOKCancel + vbExclamation, cstSettings.MSG_TITLE)
+            intConfirmAns = MsgBox("現在、ユーザー [" & strLockUser & "] が編集中です。" & vbCrLf & "閲覧モード(読み取り専用)でデータを読み込みます。", vbOKCancel + vbExclamation, strAppTitle)
             ' ユーザーがキャンセルを選択したか判定する
             If intConfirmAns = vbCancel Then
                 ' 処理を中止するため戻り値をFalseに設定する
@@ -287,8 +287,9 @@ Public Function loadFromMaster(ByVal TargetBook As Workbook, ByVal isSilent As B
                 ' 保存済み状態と偽装して保存確認ダイアログを防ぐ
                 TargetBook.Saved = True
                 
-                ' 可視状態のブックが最後の1つであるか判定する
-                If lngVisibleWbCount <= 1 Then
+                ' 可視状態のブックが最後の1つで、ほかに未保存のブック（非表示のものを含む）がないか判定する
+                ' （未保存のブックがあるときに終了すると、確認なしに変更が失われるため、対象のブックだけを閉じる）
+                If lngVisibleWbCount <= 1 And Not basUtility.HasOtherUnsavedBook(TargetBook) Then
                     ' Excelアプリケーション全体を強制的に終了させる
                     Application.Quit
                 ' ほかに開いているブックがある場合の処理
@@ -417,7 +418,7 @@ Public Function loadFromMaster(ByVal TargetBook As Workbook, ByVal isSilent As B
                 ' ヘッダーが不一致の場合の処理
                 Else
                      ' 警告を表示する
-                     MsgBox "シート [" & wsLoop.Name & "] のヘッダー構造がマスタと一致しません。同期をスキップしました。", vbExclamation, cstSettings.MSG_TITLE
+                     MsgBox "シート [" & wsLoop.Name & "] のヘッダー構造がマスタと一致しません。同期をスキップしました。", vbExclamation, strAppTitle
                 ' ヘッダー整合性判定の終了
                 End If
             ' テーブル存在判定の終了
@@ -469,11 +470,11 @@ Public Function loadFromMaster(ByVal TargetBook As Workbook, ByVal isSilent As B
         ' 編集モード状態であるか判定する
         If blnIsNowEditMode Then
             ' 編集モード完了のメッセージを表示する
-            MsgBox "編集モードで読み込みが完了しました。" & vbCrLf & "マスタファイルをロックしています。", vbInformation, cstSettings.MSG_TITLE
+            MsgBox "編集モードで読み込みが完了しました。" & vbCrLf & "マスタファイルをロックしています。", vbInformation, strAppTitle
         ' 閲覧モード状態の場合の処理
         Else
             ' 閲覧モード完了のメッセージを表示する
-            MsgBox "閲覧モードで読み込みが完了しました。", vbInformation, cstSettings.MSG_TITLE
+            MsgBox "閲覧モードで読み込みが完了しました。", vbInformation, strAppTitle
         ' モード判定の終了
         End If
     ' サイレント判定の終了
@@ -508,7 +509,7 @@ ErrorHandler:
     Application.StatusBar = False
 
     ' エラー内容をユーザーに通知する
-    MsgBox "読み込み中にエラーが発生しました: " & Err.Description, vbCritical, cstSettings.MSG_TITLE
+    MsgBox "読み込み中にエラーが発生しました: " & Err.Description, vbExclamation, strAppTitle
     ' 戻り値をFalse(失敗)に設定する
     loadFromMaster = False
     
@@ -538,7 +539,7 @@ Public Function writeToMaster(ByVal TargetBook As Workbook, ByVal isSilent As Bo
     ' 自身の有効なロックがない場合(閲覧モードの場合)か判定する
     If Not hasMyLock(TargetBook) Then
         ' 書き込み不可のメッセージを表示する
-        MsgBox "現在は閲覧モードのため、書き込みできません。", vbInformation, cstSettings.MSG_TITLE
+        MsgBox "現在は閲覧モードのため、書き込みできません。", vbInformation, strAppTitle
         ' 関数を終了する
         Exit Function
     ' ロック判定の終了
@@ -547,7 +548,7 @@ Public Function writeToMaster(ByVal TargetBook As Workbook, ByVal isSilent As Bo
     ' Mac環境であるか判定するコンパイラディレクティブ
     #If Mac Then
         ' 非対応メッセージを表示する
-        MsgBox "Mac環境での書き込みはサポートされていません。" & vbCrLf & "Windows環境で実行してください。", vbExclamation, cstSettings.MSG_TITLE
+        MsgBox "Mac環境での書き込みはサポートされていません。" & vbCrLf & "Windows環境で実行してください。", vbExclamation, strAppTitle
         ' 関数を終了する
         Exit Function
     ' コンパイラディレクティブの終了
@@ -579,7 +580,7 @@ Public Function writeToMaster(ByVal TargetBook As Workbook, ByVal isSilent As Bo
     ' マスタファイルが読み込み後に更新されているか判定する
     If dtmCurrentMasterTime > dtmLastSyncTime Then
         ' 競合ガイドメッセージを表示する
-        MsgBox cstSettings.MSG_CONFLICT_GUIDE, vbCritical, cstSettings.MSG_TITLE
+        MsgBox cstSettings.MSG_CONFLICT_GUIDE, vbExclamation, strAppTitle
         ' 終了処理ラベルへジャンプする
         GoTo Finalize
     ' 競合判定の終了
@@ -634,7 +635,7 @@ Public Function writeToMaster(ByVal TargetBook As Workbook, ByVal isSilent As Bo
     ' 3回試行しても成功しなかったか判定する
     If Not blnIsOpenSuccess Then
         ' エラーメッセージを表示する
-        MsgBox "マスタファイルを書き込みモードで開けませんでした。" & vbCrLf & "他のユーザーが開いているか、ネットワーク遅延の可能性があります。", vbCritical, cstSettings.MSG_TITLE
+        MsgBox "マスタファイルを書き込みモードで開けませんでした。" & vbCrLf & "他のユーザーが開いているか、ネットワーク遅延の可能性があります。", vbExclamation, strAppTitle
         ' 終了処理ラベルへジャンプする
         GoTo Finalize
     ' オープン成功判定の終了
@@ -712,7 +713,7 @@ Public Function writeToMaster(ByVal TargetBook As Workbook, ByVal isSilent As Bo
         On Error GoTo ErrorHandler
         
         ' エラーメッセージを表示する
-        MsgBox "マスタファイルの保存に失敗しました。" & vbCrLf & strErrDesc, vbCritical, cstSettings.MSG_TITLE
+        MsgBox "マスタファイルの保存に失敗しました。" & vbCrLf & strErrDesc, vbExclamation, strAppTitle
         ' 保存せず強制的に閉じる
         wbMaster.Close SaveChanges:=False
         ' 戻り値をFalse(失敗)に設定する
@@ -740,7 +741,7 @@ Public Function writeToMaster(ByVal TargetBook As Workbook, ByVal isSilent As Bo
     Application.StatusBar = False
 
     ' 完了メッセージを表示する
-    If Not isSilent Then MsgBox "書き込みが完了しました。閲覧モードに戻ります。", vbInformation, cstSettings.MSG_TITLE
+    If Not isSilent Then MsgBox "書き込みが完了しました。閲覧モードに戻ります。", vbInformation, strAppTitle
     ' 戻り値をTrue(成功)に設定する
     writeToMaster = True
     ' 終了処理ラベルへジャンプする
@@ -761,7 +762,7 @@ ErrorHandler:
     Application.StatusBar = False
     
     ' エラー内容を通知する
-    MsgBox "書き込みに失敗しました: " & Err.Description, vbCritical, cstSettings.MSG_TITLE
+    MsgBox "書き込みに失敗しました: " & Err.Description, vbExclamation, strAppTitle
     ' 戻り値をFalse(失敗)に設定する
     writeToMaster = False
     
@@ -961,7 +962,7 @@ Public Function acquireLock(ByVal strMasterPath As String) As Boolean
     ' 現在有効な他人のロックが存在するか判定する
     If isLocked(strMasterPath, strOutUser, dtmOutTime) Then
         ' エラーメッセージを表示する
-        MsgBox "既に他のユーザー (" & strOutUser & ") が編集を開始しています。", vbCritical, cstSettings.MSG_TITLE
+        MsgBox "既に他のユーザー (" & strOutUser & ") が編集を開始しています。", vbExclamation, strAppTitle
         ' ロック取得失敗として戻り値をFalseに設定する
         acquireLock = False
         ' 関数を終了する
@@ -991,7 +992,7 @@ Public Function acquireLock(ByVal strMasterPath As String) As Boolean
         ' エラーハンドラを標準に戻す
         On Error GoTo 0
         ' 競合エラーメッセージを表示する
-        MsgBox "競合が発生しました。他のユーザー (" & strOutUser & ") が僅かに早くロックを取得しました。", vbExclamation, cstSettings.MSG_TITLE
+        MsgBox "競合が発生しました。他のユーザー (" & strOutUser & ") が僅かに早くロックを取得しました。", vbExclamation, strAppTitle
         ' ロック取得失敗として戻り値をFalseに設定する
         acquireLock = False
     ' 競合が発生しなかった場合の処理

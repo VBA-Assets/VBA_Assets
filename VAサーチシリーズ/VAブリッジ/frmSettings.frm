@@ -83,7 +83,7 @@ End Sub
 Private Sub btnSave_Click()
     ' 入力チェック: マスタパス空欄チェック
     If txtMasterPath.text = "" Then
-        MsgBox "マスタファイルのパスを指定してください。", vbExclamation, cstSettings.MSG_TITLE
+        MsgBox "マスタファイルのパスを指定してください。", vbExclamation, strAppTitle
         Exit Sub
     End If
     
@@ -92,13 +92,13 @@ Private Sub btnSave_Click()
     ' ※テキストボックス内のパス(現在のOS形式)でチェックする
     If Not basUtility.FileExists(txtMasterPath.text) Then
         MsgBox "指定されたマスタファイルが見つかりません。" & vbCrLf & _
-               "正しいパスを入力してください。", vbExclamation, cstSettings.MSG_TITLE
+               "正しいパスを入力してください。", vbExclamation, strAppTitle
         Exit Sub
     End If
     
     ' 入力チェック: シート選択
     If cmbSheets.value = "" Or cmbMasterSheets.value = "" Then
-        MsgBox "対象シートとマスタ側のシートを両方選択してください。", vbExclamation, cstSettings.MSG_TITLE
+        MsgBox "対象シートとマスタ側のシートを両方選択してください。", vbExclamation, strAppTitle
         Exit Sub
     End If
     
@@ -117,7 +117,7 @@ Private Sub btnSave_Click()
     ' 設定変更時は強制的に再同期させるため、最終同期時刻を初期化(リセット)
     basConfig.SaveBookSetting cstSettings.PROP_LAST_SYNC, "1900/01/01", sh.Parent
     
-    MsgBox "設定を保存しました。" & vbCrLf & "「データ読み込み」を実行して同期を開始してください。", vbInformation, cstSettings.MSG_TITLE
+    MsgBox "設定を保存しました。" & vbCrLf & "「データ読み込み」を実行して同期を開始してください。", vbInformation, strAppTitle
 End Sub
 
 ' -----------------------------------------------------------------------------
@@ -130,11 +130,11 @@ Private Sub btnDelete_Click()
     Dim sh As Worksheet
     Set sh = ActiveWorkbook.Worksheets(cmbSheets.value)
     
-    If MsgBox(sh.Name & " の管理設定を削除しますか?", vbQuestion + vbYesNo, cstSettings.MSG_TITLE) = vbYes Then
+    If MsgBox(sh.Name & " の管理設定を削除しますか?", vbQuestion + vbYesNo, strAppTitle) = vbYes Then
         ' 設定削除処理
         basConfig.DeleteSheetSetting sh, cstSettings.PROP_SUFFIX_SHEET
         cmbMasterSheets.value = ""
-        MsgBox "設定を削除しました。", vbInformation, cstSettings.MSG_TITLE
+        MsgBox "設定を削除しました。", vbInformation, strAppTitle
     End If
 End Sub
 
@@ -174,5 +174,5 @@ Private Sub RefreshMasterSheetList(ByVal path As String)
 
 ErrorHandler:
     Application.ScreenUpdating = True
-    MsgBox "マスタファイルの読み込みに失敗しました。", vbCritical, cstSettings.MSG_TITLE
+    MsgBox "マスタファイルの読み込みに失敗しました。", vbExclamation, strAppTitle
 End Sub

@@ -18,7 +18,7 @@ Public Sub ExportModulesToClipboardJSON(ByVal TargetProj As Object)
     
     ' 1. プロジェクト確定
     If TargetProj Is Nothing Then
-        MsgBox "対象プロジェクトが指定されていません。", vbExclamation
+        MsgBox "対象プロジェクトが指定されていません。", vbExclamation, strAppTitle
         Exit Sub
     End If
     Set vbProj = TargetProj
@@ -72,9 +72,9 @@ Public Sub ExportModulesToClipboardJSON(ByVal TargetProj As Object)
     
     MsgBox exportCount & " 個のモジュールをクリップボードにコピーしました。" & vbCrLf & _
            "生成AIに貼り付けて使用してください。", _
-           vbInformation, "エクスポート完了"
+           vbInformation, strAppTitle
     Exit Sub
 
 ErrorHandler:
-    MsgBox "エクスポート中にエラーが発生しました。" & vbCrLf & Err.Description, vbCritical
+    MsgBox "エクスポート中にエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, strAppTitle
 End Sub

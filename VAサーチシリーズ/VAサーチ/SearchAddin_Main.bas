@@ -29,13 +29,18 @@ End Type
 '            検索フォームをモードレスで表示します。
 '            ※チェック時にシートが保護されているとエラーになる場合があるため一時解除します。
 '            ※パスワードで保護されたシートでは、保護の解除を案内してフォームを表示しません。
+'            ※途中でエラーが起きても、一時的に解除した保護を元の設定に戻します。
 '================================================================================
 Sub ShowSearchForm()
     Dim ws As Worksheet
     Dim isProtected As Boolean
+    Dim isUnprotected As Boolean
     Dim checkResult As Boolean
     Dim prt As typProtection
 
+    On Error GoTo HandleErr
+
+    '--- 前処理 ---
     ' データ範囲の簡易チェック
     ' (厳密なチェックは実行時に行うが、明らかに空白の場合は警告する)
     If TypeName(Selection) <> "Range" Then Exit Sub
@@ -47,38 +52,53 @@ Sub ShowSearchForm()
     ' パスワードで保護されている場合は、案内を表示して終了
     If isProtected Then
         If Not UnprotectTemporarily(ws, prt) Then Exit Sub
+        isUnprotected = True
     End If
 
-    ' チェック実行
-    ' エラーが発生しても保護再設定まで進めるようにエラーハンドリングを追加
+    '--- メイン処理 ---
+    ' チェック実行（判定できないセルでも先へ進めるよう、この判定だけエラーを無視する）
     checkResult = False
     On Error Resume Next
     If ActiveCell.Value = "" And ActiveCell.ListObject Is Nothing And ActiveCell.CurrentRegion.Cells.Count = 1 Then
         checkResult = True
     End If
-    On Error GoTo 0
+    On Error GoTo HandleErr
 
-    ' 保護を再設定（元々保護されていた場合のみ）
-    If isProtected Then Call ProtectAgain(ws, prt)
+    ' 保護を再設定（一時的に解除した場合のみ）
+    If isUnprotected Then
+        Call ProtectAgain(ws, prt)
+        isUnprotected = False
+    End If
 
     ' チェック結果による分岐
     If checkResult Then
-        MsgBox "データリスト内のセルを選択してから実行してください。", vbInformation, "VAサーチ"
+        MsgBox "データリスト内のセルを選択してから実行してください。", vbExclamation, strAppTitle
         Exit Sub
     End If
-    
+
     ' フォームを表示（モードレス）
     SearchForm.Show vbModeless
+
+Cleanup:
+    '--- 後処理 ---
+    ' 途中でエラーが起きたときも、一時的に解除した保護を元の設定に戻す
+    On Error Resume Next
+    If isUnprotected Then Call ProtectAgain(ws, prt)
+    Exit Sub
+
+HandleErr:
+    MsgBox "検索フォームを表示できませんでした。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
 
 '================================================================================
 ' プロシージャ: ShowSearchFormFromRibbon
 ' 機能:      リボンから呼び出されるコールバック関数
 ' 概要:      リボンのボタンクリックイベント（onAction）から呼び出されます。
-'            引数 control は IRibbonControl 型ですが、参照設定の手間を省くため
-'            Object 型、または遅延バインディングで動作するようにしています。
+' 引数:      control … 押されたボタン（参照設定に頼らないよう Object で受けます）
 '================================================================================
-Sub ShowSearchFormFromRibbon(control As Object)
+Sub ShowSearchFormFromRibbon(ByVal control As Object)
     ' 既存の表示プロシージャを呼び出し
     Call ShowSearchForm
 End Sub
@@ -89,63 +109,73 @@ End Sub
 ' 概要:      アクティブなデータ範囲（テーブルまたは通常範囲）を特定し、
 '            指定された条件で検索し、ヒットしない行を非表示にします。
 '            ※シート保護時は一時解除して実行します（パスワードで保護されている場合は実行しません）。
+'            ※途中でエラーが起きても、保護と画面の更新を元に戻します。
 '================================================================================
 Sub ExecuteSearch(strText As String, strMode As String)
     Dim rngTargetBody As Range
     Dim ws As Worksheet
     Dim isProtected As Boolean
+    Dim isUnprotected As Boolean
     Dim prt As typProtection
+    Dim visibleCount As Long
+    Dim blnSavedScreenUpdating As Boolean
+
+    ' 画面の更新の前の値を控える（後処理で、この値に戻す）
+    blnSavedScreenUpdating = Application.ScreenUpdating
+    On Error GoTo HandleErr
+
+    '--- 前処理 ---
+    ' ワークシートの取得と保護状態の確認（セルを選んでいなければ何もしない）
+    If TypeName(Selection) <> "Range" Then Exit Sub
+    Set ws = ActiveCell.Parent
+    isProtected = ws.ProtectContents
 
     Application.ScreenUpdating = False
-
-    ' ワークシートの取得と保護状態の確認
-    If TypeName(Selection) = "Range" Then
-        Set ws = ActiveCell.Parent
-        isProtected = ws.ProtectContents
-    Else
-        Application.ScreenUpdating = True
-        Exit Sub
-    End If
 
     ' 保護されている場合は一時的に解除
     ' パスワードで保護されている場合は、案内を表示して終了
     If isProtected Then
-        If Not UnprotectTemporarily(ws, prt) Then
-            Application.ScreenUpdating = True
-            Exit Sub
-        End If
+        If Not UnprotectTemporarily(ws, prt) Then GoTo Cleanup
+        isUnprotected = True
     End If
 
+    '--- メイン処理 ---
     ' 1. データ範囲（ヘッダーを除く本体）を取得
     Set rngTargetBody = GetTargetDataBody(ActiveCell)
-    
+
     If rngTargetBody Is Nothing Then
-        MsgBox "検索対象のデータが見つかりません。" & vbCrLf & "リスト内のセルを選択してください。", vbExclamation
-        ' 保護を戻して終了
-        If isProtected Then Call ProtectAgain(ws, prt)
-        Application.ScreenUpdating = True
-        Exit Sub
-    End If
-    
-    ' 2. 既存のフィルタと非表示状態をリセット（すべて表示）
-    Call ResetFilterAndHidden(rngTargetBody)
-    
-    ' 3. 検索ロジックの適用（非表示処理も含む）
-    Dim visibleCount As Long
-    visibleCount = g_SearchLogic.ApplySearchAndHide(rngTargetBody, strText, strMode)
-    
-    ' 4. 先頭行へスクロール
-    Application.GoTo rngTargetBody.Cells(1, 1), True
-    
-    ' 5. 結果確認
-    If visibleCount = 0 Then
-        MsgBox "該当するデータはありませんでした。", vbInformation, "検索結果"
+        MsgBox "検索対象のデータが見つかりません。" & vbCrLf & "リスト内のセルを選択してください。", vbExclamation, strAppTitle
+        GoTo Cleanup
     End If
 
-    ' 保護を再設定（元々保護されていた場合のみ）
-    If isProtected Then Call ProtectAgain(ws, prt)
-    
+    ' 2. 既存のフィルタと非表示状態をリセット（すべて表示）
+    Call ResetFilterAndHidden(rngTargetBody)
+
+    ' 3. 検索ロジックの適用（非表示処理も含む）
+    visibleCount = g_SearchLogic.ApplySearchAndHide(rngTargetBody, strText, strMode)
+
+    ' 4. 先頭行へスクロール
+    Application.GoTo rngTargetBody.Cells(1, 1), True
+
+    ' 5. 結果確認
+    If visibleCount = 0 Then
+        MsgBox "該当するデータはありませんでした。", vbInformation, strAppTitle
+    End If
+
+Cleanup:
+    '--- 後処理 ---
+    ' 途中でエラーが起きても、保護と画面の更新を必ず元に戻す
+    On Error Resume Next
+    ' 保護を再設定（一時的に解除した場合のみ）
+    If isUnprotected Then Call ProtectAgain(ws, prt)
+    Application.ScreenUpdating = blnSavedScreenUpdating
+    Exit Sub
+
+HandleErr:
     Application.ScreenUpdating = True
+    MsgBox "検索の途中でエラーが起きました。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
 
 '================================================================================
@@ -153,36 +183,39 @@ End Sub
 ' 機能:      検索を解除します。
 ' 概要:      行の非表示状態を解除し、すべて表示します。
 '            ※シート保護時は一時解除して実行します（パスワードで保護されている場合は実行しません）。
+'            ※途中でエラーが起きても、保護と画面の更新を元に戻します。
 '================================================================================
 Sub ClearSearch()
     Dim rngTargetBody As Range
     Dim ws As Worksheet
     Dim isProtected As Boolean
+    Dim isUnprotected As Boolean
     Dim prt As typProtection
+    Dim blnSavedScreenUpdating As Boolean
+
+    ' 画面の更新の前の値を控える（後処理で、この値に戻す）
+    blnSavedScreenUpdating = Application.ScreenUpdating
+    On Error GoTo HandleErr
+
+    '--- 前処理 ---
+    ' ワークシートの取得と保護状態の確認（セルを選んでいなければ何もしない）
+    If TypeName(Selection) <> "Range" Then Exit Sub
+    Set ws = ActiveCell.Parent
+    isProtected = ws.ProtectContents
 
     Application.ScreenUpdating = False
-
-    ' ワークシートの取得と保護状態の確認
-    If TypeName(Selection) = "Range" Then
-        Set ws = ActiveCell.Parent
-        isProtected = ws.ProtectContents
-    Else
-        Application.ScreenUpdating = True
-        Exit Sub
-    End If
 
     ' 保護されている場合は一時的に解除
     ' パスワードで保護されている場合は、案内を表示して終了
     If isProtected Then
-        If Not UnprotectTemporarily(ws, prt) Then
-            Application.ScreenUpdating = True
-            Exit Sub
-        End If
+        If Not UnprotectTemporarily(ws, prt) Then GoTo Cleanup
+        isUnprotected = True
     End If
 
+    '--- メイン処理 ---
     ' データ範囲を取得
     Set rngTargetBody = GetTargetDataBody(ActiveCell)
-    
+
     If Not rngTargetBody Is Nothing Then
         ' リセット実行
         Call ResetFilterAndHidden(rngTargetBody)
@@ -190,10 +223,20 @@ Sub ClearSearch()
         Application.GoTo ActiveCell, True
     End If
 
-    ' 保護を再設定（元々保護されていた場合のみ）
-    If isProtected Then Call ProtectAgain(ws, prt)
+Cleanup:
+    '--- 後処理 ---
+    ' 途中でエラーが起きても、保護と画面の更新を必ず元に戻す
+    On Error Resume Next
+    ' 保護を再設定（一時的に解除した場合のみ）
+    If isUnprotected Then Call ProtectAgain(ws, prt)
+    Application.ScreenUpdating = blnSavedScreenUpdating
+    Exit Sub
 
+HandleErr:
     Application.ScreenUpdating = True
+    MsgBox "検索の解除の途中でエラーが起きました。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
 
 '================================================================================
@@ -235,7 +278,7 @@ Private Function UnprotectTemporarily(ws As Worksheet, prt As typProtection) As 
     If ws.ProtectContents Then
         Application.ScreenUpdating = True
         MsgBox "このシートはパスワードで保護されているため、検索できません。" & vbCrLf & _
-               "シートの保護を解除してから実行してください。", vbExclamation, "VAサーチ"
+               "シートの保護を解除してから実行してください。", vbExclamation, strAppTitle
         UnprotectTemporarily = False
     Else
         UnprotectTemporarily = True

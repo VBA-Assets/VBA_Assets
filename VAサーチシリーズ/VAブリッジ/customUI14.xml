@@ -1,0 +1,33 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" xmlns:va="VA_Shared_Namespace">
+  <ribbon>
+    <tabs>
+      <!-- カスタムタブ "VA" -->
+     <tab idQ="va:tabVA" label="VA">
+        <!-- グループ: VAブリッジ -->
+        <group id="grpVABridge" label="VAブリッジ">
+          <!-- 読み込みボタン -->
+          <button id="btnLoad"
+                label="データ読み込み"
+                imageMso="ShapeDownArrow"
+                size="large"
+                onAction="OnLoadPressed"
+                supertip="マスタファイルのデータをすべての管理対象シートに読み込みます。" />
+          <!-- 書き込みボタン -->
+          <button id="btnWrite"
+                label="データ書き込み"
+                imageMso="ShapeUpArrow"
+                size="large"
+                onAction="OnWritePressed"
+                supertip="すべての管理対象シートのデータをマスタファイルに書き込みます。" />
+          <!-- 設定ボタン -->
+          <button id="btnSettings"
+                label="マスタ設定"
+                imageMso="ListSetting"
+                size="large"
+                onAction="OnSettingsPressed"
+                supertip="管理対象シートとリンクするマスタシートを設定します。各シートに１つのテーブルがある場合にのみ対応しています。" />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

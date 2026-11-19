@@ -20,7 +20,7 @@ Public Sub ShowImportExportMenu()
     ' フォームが見つからない場合のエラーチェックを行います
     If Err.Number <> 0 Then
         ' エラーメッセージを表示します
-        MsgBox "フォーム 'frmStartMenu' が見つかりません。", vbCritical
+        MsgBox "フォーム 'frmStartMenu' が見つかりません。", vbExclamation, strAppTitle
     End If
     ' エラー処理を通常の動作に戻します
     On Error GoTo 0
@@ -31,7 +31,8 @@ End Sub
 ' リボンXML (customUI) から呼び出されるプロシージャです。
 ' 引数 control は IRibbonControl 型ですが、参照設定を回避するため Object または Variant としています。
 '================================================================================
-Public Sub OnRibbonButton_Click(control As Object)
+' 他のアドイン（VAコード等）と重ならない固有の名前にしています。
+Public Sub VAClip_OnRibbonButton_Click(ByVal control As Object)
     ' タグなどの判定が必要な場合は control.ID や control.Tag を使用します
     ' ここではシンプルにメインメニューを呼び出します
     Call ShowImportExportMenu

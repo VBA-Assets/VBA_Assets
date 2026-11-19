@@ -1,0 +1,19 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" xmlns:va="VA_Shared_Namespace">
+  <ribbon>
+    <tabs>
+      <!-- カスタムタブ "VA" -->
+     <tab idQ="va:tabVA" label="VA">
+         <!-- グループ「セキュリティ」を追加 -->
+        <group id="grpVASecurity" label="VAセキュリティ">
+          <!-- ボタン定義 -->
+          <button id="btnSanitize" 
+                  label="情報削除" 
+                  imageMso="AfterDelete" 
+                  size="large" 
+                  onAction="SanitizeWorkbookFromRibbon" 
+                  supertip="作業中のブックから、コメント・メモ・ドキュメントのプロパティ・個人情報などを削除します。実行の前に確かめます。" />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

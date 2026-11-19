@@ -99,26 +99,22 @@ End Sub
 ' リボンUIからの操作を受け取るプロシージャ群
 ' -----------------------------------------------------------------------------
 
-' RibbonXMLのロード時に呼ばれる初期化処理用
-Sub OnRibbonLoad(ribbon As IRibbonUI)
-    ' 必要に応じてリボンUIの状態を更新する処理を（現在は特になし）
-End Sub
-
 ' リボンの「データ読み込み」ボタンが押された時の処理
-Sub OnLoadPressed(control As IRibbonControl)
+' （引数 control は押されたボタン。参照設定に頼らないよう Object で受ける）
+Sub OnLoadPressed(ByVal control As Object)
     ' 全シートを対象に読み込み処理を実行（True = 読み込み）
     ' ※ボタン操作時はサイレントモードOFF（isSilent=False）
     ProcessAllSheets True
 End Sub
 
 ' リボンの「データ書き込み」ボタンが押された時の処理
-Sub OnWritePressed(control As IRibbonControl)
+Sub OnWritePressed(ByVal control As Object)
     ' 全シートを対象に書き込み処理を実行（False = 書き込み）
     ProcessAllSheets False
 End Sub
 
 ' リボンの「マスタ設定」ボタンが押された時の処理
-Sub OnSettingsPressed(control As IRibbonControl)
+Sub OnSettingsPressed(ByVal control As Object)
     ' 設定フォームを表示する
     frmSettings.Show
 End Sub
@@ -147,7 +143,7 @@ Public Sub ProcessAllSheets(ByVal isLoad As Boolean, Optional ByVal Wb As Workbo
     If Not hasManaged Then
         ' 読み込み操作でない場合（ユーザー操作時）はメッセージを表示
         ' ※サイレントモード時はメッセージを出さない
-        If Not isLoad And Not isSilent Then MsgBox "管理対象シートがありません。", vbInformation, cstSettings.MSG_TITLE
+        If Not isLoad And Not isSilent Then MsgBox "管理対象シートがありません。", vbInformation, strAppTitle
         Exit Sub
     End If
 

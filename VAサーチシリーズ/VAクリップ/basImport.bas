@@ -16,7 +16,7 @@ Public Sub ImportModulesFromClipboardJSON(ByVal TargetProj As Object)
     
     ' 1. プロジェクト確定
     If TargetProj Is Nothing Then
-        MsgBox "対象プロジェクトが指定されていません。", vbExclamation
+        MsgBox "対象プロジェクトが指定されていません。", vbExclamation, strAppTitle
         Exit Sub
     End If
     Set vbProj = TargetProj
@@ -24,7 +24,7 @@ Public Sub ImportModulesFromClipboardJSON(ByVal TargetProj As Object)
     ' 2. クリップボード取得
     jsonStr = basUtility.GetClipboardText()
     If Len(jsonStr) = 0 Then
-        MsgBox "クリップボードが空か、テキストデータの取得に失敗しました。", vbExclamation
+        MsgBox "クリップボードが空か、テキストデータの取得に失敗しました。", vbExclamation, strAppTitle
         Exit Sub
     End If
     
@@ -33,7 +33,7 @@ Public Sub ImportModulesFromClipboardJSON(ByVal TargetProj As Object)
     
     If modules.Count = 0 Then
         MsgBox "有効なJSONデータが見つかりませんでした。" & vbCrLf & _
-               "クリップボードの内容が正しい形式（生成AIからの出力）か確認してください。", vbExclamation
+               "クリップボードの内容が正しい形式（生成AIからの出力）か確認してください。", vbExclamation, strAppTitle
         Exit Sub
     End If
     
@@ -48,13 +48,13 @@ Public Sub ImportModulesFromClipboardJSON(ByVal TargetProj As Object)
     Next i
     
     MsgBox "処理完了" & vbCrLf & _
-           "インポート成功: " & successCount & " / " & modules.Count, vbInformation
+           "インポート成功: " & successCount & " / " & modules.Count, vbInformation, strAppTitle
            
     Exit Sub
 
 ErrorHandler:
     MsgBox "インポート中にエラーが発生しました。" & vbCrLf & _
-           "Error: " & Err.Number & vbCrLf & Err.Description, vbCritical
+           "Error: " & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
 End Sub
 
 '--------------------------------------------------------------------------------

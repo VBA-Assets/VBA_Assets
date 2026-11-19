@@ -16,14 +16,14 @@ Public Sub ImportModulesFromFiles(ByVal TargetProj As Object, ByVal FolderPath A
     On Error GoTo ErrorHandler
 
     If TargetProj Is Nothing Then
-        MsgBox "対象プロジェクトが指定されていません。", vbExclamation
+        MsgBox "対象プロジェクトが指定されていません。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
     ' 自プロジェクトへのインポートは禁止（実行中のコードが破壊される）
     If TargetProj Is ThisWorkbook.VBProject Then
         MsgBox "VAコード自身へのインポートはできません。" & vbCrLf & _
-               "別のプロジェクトを選択してください。", vbExclamation
+               "別のプロジェクトを選択してください。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -38,7 +38,7 @@ Public Sub ImportModulesFromFiles(ByVal TargetProj As Object, ByVal FolderPath A
     manifestPath = FolderPath & "manifest.json"
     If Not basUtility.FileExists(manifestPath) Then
         MsgBox "manifest.json が見つかりません。" & vbCrLf & _
-               "フォルダ: " & FolderPath, vbExclamation
+               "フォルダ: " & FolderPath, vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -46,7 +46,7 @@ Public Sub ImportModulesFromFiles(ByVal TargetProj As Object, ByVal FolderPath A
     Set modules = basJson.ParseManifestModules(manifestStr)
 
     If modules.Count = 0 Then
-        MsgBox "manifest.json にモジュール定義が見つかりません。", vbExclamation
+        MsgBox "manifest.json にモジュール定義が見つかりません。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -79,12 +79,12 @@ Public Sub ImportModulesFromFiles(ByVal TargetProj As Object, ByVal FolderPath A
 
     MsgBox "処理完了" & vbCrLf & _
            "インポート成功: " & successCount & " / " & modules.Count & vbCrLf & vbCrLf & _
-           "Ctrl+Sを押して、ファイルを保存してください。", vbInformation, "処理完了"
+           "Ctrl+Sを押して、ファイルを保存してください。", vbInformation, strAppTitle
     Exit Sub
 
 ErrorHandler:
     MsgBox "インポート中にエラーが発生しました。" & vbCrLf & _
-           "Error: " & Err.Number & vbCrLf & Err.Description, vbCritical
+           "Error: " & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
 End Sub
 
 '--------------------------------------------------------------------------------

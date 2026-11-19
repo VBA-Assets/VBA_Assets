@@ -58,7 +58,7 @@ Private Sub App_WorkbookBeforeSave(ByVal Wb As Workbook, ByVal SaveAsUI As Boole
     Cancel = True
     
     ' ユーザーに保存不可のメッセージを表示する
-    MsgBox "セキュリティ確保のため、このファイルの保存は禁止されています。" & vbCrLf & "マスタファイルへのデータ反映は、リボンの「データ書き込み」を使用してください。", vbExclamation, cstSettings.MSG_TITLE
+    MsgBox "セキュリティ確保のため、このファイルの保存は禁止されています。" & vbCrLf & "マスタファイルへのデータ反映は、リボンの「データ書き込み」を使用してください。", vbExclamation, strAppTitle
 ' プロシージャの終了
 End Sub
 
@@ -91,7 +91,7 @@ Private Sub App_WorkbookBeforeClose(ByVal Wb As Workbook, Cancel As Boolean)
             ' ユーザーの選択結果を格納する変数を宣言する
             Dim intAns As VbMsgBoxResult
             ' 保存確認のメッセージを表示し結果を取得する
-            intAns = MsgBox("マスタファイルにデータを書き込みますか？", vbYesNoCancel + vbQuestion, cstSettings.MSG_TITLE)
+            intAns = MsgBox("マスタファイルにデータを書き込みますか？", vbYesNoCancel + vbQuestion, strAppTitle)
             
             ' ユーザーの選択結果に応じて処理を分岐する
             Select Case intAns
@@ -155,8 +155,9 @@ Private Sub App_WorkbookBeforeClose(ByVal Wb As Workbook, Cancel As Boolean)
     ' 次のブックへループを進める
     Next objLoopWb
     
-    ' 可視状態のブックが最後の1つであるか判定する
-    If lngVisibleWbCount <= 1 Then
+    ' 可視状態のブックが最後の1つで、ほかに未保存のブック（非表示のものを含む）がないか判定する
+    ' （未保存のブックがあるときに終了すると、確認なしに変更が失われるため、対象のブックだけを閉じる）
+    If lngVisibleWbCount <= 1 And Not basUtility.HasOtherUnsavedBook(Wb) Then
         ' イベントの連鎖を防ぐためイベント発生を一時無効化する
         Application.EnableEvents = False
         ' 確認ダイアログの表示を一時無効化する
