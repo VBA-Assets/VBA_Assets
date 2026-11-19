@@ -70,99 +70,96 @@ ErrHandler:
     
 End Sub
 
-'================================================================================
-' プロシージャ: PerformDailyBackup
-' 機能:         日次自動バックアップの実行
-' 概要:         設定されたバックアップフォルダへ、現在のブックのコピーを
-'               日付付きファイル名（yyyymmdd_BookName.xlsx）で保存します。
-'               その日最初の起動時のみ実行されます。
-'================================================================================
-Sub PerformDailyBackup(Optional ByVal dummy As Byte = 0)
-    'バックアップフォルダのパスを格納する変数を宣言します
-    Dim backupFolder As String
-    'バックアップファイルのファイル名を格納する変数を宣言します
-    Dim backupFileName As String
-    '保存先のフルパスを格納する変数を宣言します
-    Dim targetPath As String
-    'パス区切り文字を格納する変数を宣言します
-    Dim PS As String
-    '元のファイル名（拡張子なし）を格納する変数を宣言します
-    Dim baseName As String
-    '新規作成したブックを操作するための変数を宣言します
-    Dim wbNew As Workbook
-    '事件シートのテーブルオブジェクトを操作するための変数を宣言します
-    Dim tbl As ListObject
+'--------------------------------------------------------------------------------
+' 概要：設定したバックアップフォルダに、このブックの写し（マクロなしの .xlsx）を
+'       「yyyymmdd_事件データベース.xlsx」の名前で作る。その日の写しが既にあれば作らない（1日に1回）。
+'       データがないとき、フォルダが未設定か存在しないときは、何もしない。
+' 引数：blnDummy - ［マクロ］ダイアログに出さないためのダミー（使わない）
+' 戻り値：なし
+' 備考：ブックの名前は、配布のときは版つき（事件データベースVerNNN.xlsm）、インストールの後は
+'       版なし（事件データベース.xlsm）になる。どちらでも同じ写しの名前になるよう、GetBackupBaseName で求める。
+'--------------------------------------------------------------------------------
+Sub PerformDailyBackup(Optional ByVal blnDummy As Boolean = False)
+    Dim strBackupFolder As String   'バックアップフォルダ
+    Dim strTargetPath As String     '写しのフルパス
+    Dim strPS As String             'パスの区切り文字（Windows は「\」、Mac は「/」）
+    Dim blnAlerts As Boolean        '処理の前の DisplayAlerts の値（後処理で戻す）
+    Dim wbNew As Workbook           '写しのブック
+    Dim tbl As ListObject           'データのテーブル
 
-    '事件シート（sht11）にある「事件」テーブルをオブジェクト変数にセットします
+    '--- 前処理 ---
+    blnAlerts = Application.DisplayAlerts
+    On Error GoTo HandleErr
+
+    'データがないときは、写しを作らない
     Set tbl = sht11.ListObjects("事件")
-    
-    'テーブルにデータ行が存在しない（0件）場合は、バックアップ処理を行わずに終了します
-    If tbl.ListRows.Count = 0 Then Exit Sub
+    If tbl.ListRows.Count = 0 Then GoTo Cleanup
 
-    'OSごとのパス区切り文字（Windowsは￥、Macは/）を取得します
-    PS = Application.PathSeparator
-    
-    '設定値の読み込みエラーを無視するため、エラー処理を一時的に無効化します
+    'オプションシートのバックアップフォルダを読む（名前の定義がないときは、空のままにする）
     On Error Resume Next
-    '設定シートからバックアップ保存先のフォルダパスを取得します
-    backupFolder = shtOpt.Range("バックアップフォルダ").Value
-    'エラー処理の無効化を解除し、通常のエラー検知に戻します
-    On Error GoTo 0
-    
-    'バックアップフォルダが設定されていない場合は、処理を終了します
-    If backupFolder = "" Then Exit Sub
-    
-    'これ以降の処理でエラーが発生した場合、エラー処理ルーチンへ移動するように設定します
-    On Error GoTo ErrHandler
-    
-    '指定されたバックアップ先フォルダが存在しない場合は、処理を終了します
-    If Dir(backupFolder, vbDirectory) = "" Then Exit Sub
-    
-    '現在のブック名から拡張子を除いたベース名を取得します
-    baseName = Left(ThisWorkbook.Name, InStrRev(ThisWorkbook.Name, "V") - 1)
-    '今日の日付とベース名を組み合わせて、保存するファイル名を作成します（拡張子はxlsx）
-    backupFileName = Format(Date, "yyyymmdd") & "_" & baseName & ".xlsx"
-    
-    'フォルダパスの末尾にパス区切り文字がない場合を確認します
-    If Right(backupFolder, 1) <> PS Then
-        '区切り文字を付加して、フォルダパスとファイル名を結合します
-        targetPath = backupFolder & PS & backupFileName
-    'フォルダパスの末尾に既にパス区切り文字がある場合です
-    Else
-        'そのままフォルダパスとファイル名を結合します
-        targetPath = backupFolder & backupFileName
-    'パス結合の条件分岐を終了します
-    End If
-    
-    'その日のバックアップファイルがまだ存在しない場合のみ、以下の処理を実行します
-    If Dir(targetPath) = "" Then
-        '保存時の確認メッセージ等を非表示にするため、警告を無効にします
-        Application.DisplayAlerts = False
-        
-        '現在のブックの全シートをコピーして、新規ブックを作成します
-        ThisWorkbook.Sheets.Copy
-        '作成された新規ブックを変数に格納します
-        Set wbNew = ActiveWorkbook
-        
-        '新規ブックを指定されたパスに、マクロなしのExcelブック形式(.xlsx)で保存します
-        wbNew.SaveAs fileName:=targetPath, FileFormat:=xlOpenXMLWorkbook
-        '保存したバックアップ用ブックを閉じます
-        wbNew.Close SaveChanges:=False
-        
-        '無効にしていた警告メッセージを再度有効にします
-        Application.DisplayAlerts = True
-    'バックアップ作成処理の条件分岐を終了します
-    End If
-    
-    '正常に完了した場合、ここでプロシージャを抜けます
+    strBackupFolder = CStr(shtOpt.Range("バックアップフォルダ").Value)
+    On Error GoTo HandleErr
+
+    'フォルダが未設定か、存在しないときは、何もしない
+    If strBackupFolder = "" Then GoTo Cleanup
+    If Dir(strBackupFolder, vbDirectory) = "" Then GoTo Cleanup
+
+    '--- メイン処理 ---
+    '写しのフルパスを作る（例：<フォルダ>\20261119_事件データベース.xlsx）
+    strPS = Application.PathSeparator
+    If Right(strBackupFolder, 1) <> strPS Then strBackupFolder = strBackupFolder & strPS
+    strTargetPath = strBackupFolder & Format(Date, "yyyymmdd") & "_" & GetBackupBaseName(ThisWorkbook.Name) & ".xlsx"
+
+    'その日の写しが既にあれば、作らない
+    If Dir(strTargetPath) <> "" Then GoTo Cleanup
+
+    '全シートを新しいブックに写し、マクロなしのブック（.xlsx）として保存して閉じる
+    '（シートのコードを保存できない旨の確認を出さないため、DisplayAlerts を止める）
+    Application.DisplayAlerts = False
+    ThisWorkbook.Sheets.Copy
+    Set wbNew = ActiveWorkbook
+    wbNew.SaveAs fileName:=strTargetPath, FileFormat:=xlOpenXMLWorkbook
+    wbNew.Close SaveChanges:=False
+    Set wbNew = Nothing
+
+Cleanup:
+    '--- 後処理 ---
+    On Error Resume Next
+    '途中で失敗したときは、写しのブックを保存せずに閉じる
+    If Not wbNew Is Nothing Then wbNew.Close SaveChanges:=False
+    Application.DisplayAlerts = blnAlerts
     Exit Sub
 
-ErrHandler:
-    'エラーの内容をメッセージボックスでユーザーに通知します
+HandleErr:
     MsgBox "自動バックアップの作成中にエラーが発生しました。" & vbCrLf & _
-           "保存先: " & backupFolder & vbCrLf & _
-           "詳細: " & Err.Description, vbExclamation, "事件データベース"
-    'エラー終了時でも警告機能が元に戻るように設定します
-    Application.DisplayAlerts = True
+           "保存先：" & strBackupFolder & vbCrLf & _
+           "エラー番号：" & Err.Number & vbCrLf & _
+           "内容：" & Err.Description, vbExclamation, "VA事件データベース"
+    Resume Cleanup
 End Sub
+
+'--------------------------------------------------------------------------------
+' 概要：ブックのファイル名から、バックアップの写しの名前に使う部分を返す。
+'       拡張子を除き、末尾が版（「Ver」と英数字3文字）なら、それも除く。
+'       例：「事件データベースVerNNN.xlsm」→「事件データベース」、「事件データベース.xlsm」→「事件データベース」
+' 引数：strFileName - ブックのファイル名
+' 戻り値：写しの名前に使う部分
+'--------------------------------------------------------------------------------
+Private Function GetBackupBaseName(ByVal strFileName As String) As String
+    Dim strBase As String   '拡張子を除いた名前
+    Dim lngDot As Long      '最後の「.」の位置
+
+    '拡張子（最後の「.」から後ろ）を除く
+    lngDot = InStrRev(strFileName, ".")
+    If lngDot > 1 Then
+        strBase = Left(strFileName, lngDot - 1)
+    Else
+        strBase = strFileName
+    End If
+
+    '末尾の版（例：Ver403、VerA05）を除く
+    If strBase Like "*Ver[0-9A-Z][0-9A-Z][0-9A-Z]" Then strBase = Left(strBase, Len(strBase) - 6)
+
+    GetBackupBaseName = strBase
+End Function
 

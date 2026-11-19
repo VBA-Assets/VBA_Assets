@@ -1,5 +1,5 @@
 {
-  "project": "VAコード",
+  "project": "VA_Code",
   "modules": [
     {"name": "ThisWorkbook", "type": "Document", "file": "ThisWorkbook.bas"},
     {"name": "Sheet1", "type": "Document", "file": "Sheet1.bas"},

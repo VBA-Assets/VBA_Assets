@@ -70,96 +70,96 @@ ErrHandler:
 ' プロシージャを終了する
 End Sub
 
-'--------------------------------------------------
-' 概要: 現在のブックのバックアップを作成します。
-' 引数: dummy (Byte)
-' 戻り値: なし
-'--------------------------------------------------
-' バックアップ作成プロシージャ
-Sub PerformDailyBackup(Optional ByVal dummy As Byte = 0)
-    ' バックアップフォルダパス格納用の文字列変数を宣言する
-    Dim backupFolder As String
-    ' バックアップファイル名格納用の文字列変数を宣言する
-    Dim backupFileName As String
-    ' 保存先フルパス格納用の文字列変数を宣言する
-    Dim targetPath As String
-    ' パスセパレータ格納用の文字列変数を宣言する
-    Dim PS As String
-    ' ベースファイル名格納用の文字列変数を宣言する
-    Dim baseName As String
-    ' 新規ブック格納用のオブジェクト変数を宣言する
-    Dim wbNew As Workbook
-    ' テーブル情報格納用のオブジェクト変数を宣言する
-    Dim tbl As ListObject
+'--------------------------------------------------------------------------------
+' 概要：設定したバックアップフォルダに、このブックの写し（マクロなしの .xlsx）を
+'       「yyyymmdd_領収書等ファイル保管.xlsx」の名前で作る。その日の写しが既にあれば作らない（1日に1回）。
+'       データがないとき、フォルダが未設定か存在しないときは、何もしない。
+' 引数：blnDummy - ［マクロ］ダイアログに出さないためのダミー（使わない）
+' 戻り値：なし
+' 備考：ブックの名前は、配布のときは版つき（領収書等ファイル保管VerNNN.xlsm）、インストールの後は
+'       版なし（領収書等ファイル保管.xlsm）になる。どちらでも同じ写しの名前になるよう、GetBackupBaseName で求める。
+'--------------------------------------------------------------------------------
+Sub PerformDailyBackup(Optional ByVal blnDummy As Boolean = False)
+    Dim strBackupFolder As String   'バックアップフォルダ
+    Dim strTargetPath As String     '写しのフルパス
+    Dim strPS As String             'パスの区切り文字（Windows は「\」、Mac は「/」）
+    Dim blnAlerts As Boolean        '処理の前の DisplayAlerts の値（後処理で戻す）
+    Dim wbNew As Workbook           '写しのブック
+    Dim tbl As ListObject           'データのテーブル
 
-    ' 「保管」テーブルをtblにセットする
+    '--- 前処理 ---
+    blnAlerts = Application.DisplayAlerts
+    On Error GoTo HandleErr
+
+    'データがないときは、写しを作らない
     Set tbl = ShtHokan.ListObjects("保管")
-    ' テーブルにデータが存在しない場合はバックアップを作成せず終了する
-    If tbl.ListRows.Count = 0 Then Exit Sub
-    
-    ' OS標準のパスセパレータ（\など）を取得する
-    PS = Application.PathSeparator
-    
-    ' エラーが発生しても次の行の処理を続行する
+    If tbl.ListRows.Count = 0 Then GoTo Cleanup
+
+    'オプションシートのバックアップフォルダを読む（名前の定義がないときは、空のままにする）
     On Error Resume Next
-    ' オプションシートからバックアップフォルダパスを取得する
-    backupFolder = ShtOption.Range("バックアップフォルダ").Value
-    ' エラー処理を初期状態に戻す
-    On Error GoTo 0
-    
-    ' バックアップフォルダが指定されていなければ処理を終了する
-    If backupFolder = "" Then Exit Sub
-    
-    ' 以降でエラーが発生した場合はErrHandlerラベルへ飛ぶ
-    On Error GoTo ErrHandler
-    ' バックアップ先フォルダが存在しない場合は処理を終了する
-    If Dir(backupFolder, vbDirectory) = "" Then Exit Sub
-    
-    ' 現在のブック名から「V」より前の部分をベース名として抽出する
-    baseName = Left(ThisWorkbook.Name, InStrRev(ThisWorkbook.Name, "V") - 1)
-    ' 日付とベース名を結合し、バックアップファイル名を生成する
-    backupFileName = Format(Date, "yyyymmdd") & "_" & baseName & ".xlsx"
-    
-    ' フォルダパスの末尾がパスセパレータでない場合
-    If Right(backupFolder, 1) <> PS Then
-        ' パスセパレータを挟んでフルパスを結合する
-        targetPath = backupFolder & PS & backupFileName
-    ' フォルダパスの末尾がパスセパレータである場合
-    Else
-        ' そのままファイル名と結合する
-        targetPath = backupFolder & backupFileName
-    ' 条件分岐を終了する
-    End If
-    
-    ' 同日のバックアップファイルがまだ存在しない場合
-    If Dir(targetPath) = "" Then
-        ' 確認メッセージの表示をオフにする
-        Application.DisplayAlerts = False
-        ' 現在のブックのすべてのシートを新規ブックにコピーする
-        ThisWorkbook.Sheets.Copy
-        ' コピーして新しく開かれたブックをwbNewにセットする
-        Set wbNew = ActiveWorkbook
-        
-        ' 新規ブックを標準のxlsx形式でバックアップフォルダに保存する
-        wbNew.SaveAs Filename:=targetPath, FileFormat:=xlOpenXMLWorkbook
-        ' 新規ブックを保存せずに（保存済みのためそのまま）閉じる
-        wbNew.Close SaveChanges:=False
-        
-        ' 確認メッセージの表示をオンに戻す
-        Application.DisplayAlerts = True
-    ' 条件分岐を終了する
-    End If
-    ' プロシージャを正常終了する
+    strBackupFolder = CStr(ShtOption.Range("バックアップフォルダ").Value)
+    On Error GoTo HandleErr
+
+    'フォルダが未設定か、存在しないときは、何もしない
+    If strBackupFolder = "" Then GoTo Cleanup
+    If Dir(strBackupFolder, vbDirectory) = "" Then GoTo Cleanup
+
+    '--- メイン処理 ---
+    '写しのフルパスを作る（例：<フォルダ>\20261119_領収書等ファイル保管.xlsx）
+    strPS = Application.PathSeparator
+    If Right(strBackupFolder, 1) <> strPS Then strBackupFolder = strBackupFolder & strPS
+    strTargetPath = strBackupFolder & Format(Date, "yyyymmdd") & "_" & GetBackupBaseName(ThisWorkbook.Name) & ".xlsx"
+
+    'その日の写しが既にあれば、作らない
+    If Dir(strTargetPath) <> "" Then GoTo Cleanup
+
+    '全シートを新しいブックに写し、マクロなしのブック（.xlsx）として保存して閉じる
+    '（シートのコードを保存できない旨の確認を出さないため、DisplayAlerts を止める）
+    Application.DisplayAlerts = False
+    ThisWorkbook.Sheets.Copy
+    Set wbNew = ActiveWorkbook
+    wbNew.SaveAs Filename:=strTargetPath, FileFormat:=xlOpenXMLWorkbook
+    wbNew.Close SaveChanges:=False
+    Set wbNew = Nothing
+
+Cleanup:
+    '--- 後処理 ---
+    On Error Resume Next
+    '途中で失敗したときは、写しのブックを保存せずに閉じる
+    If Not wbNew Is Nothing Then wbNew.Close SaveChanges:=False
+    Application.DisplayAlerts = blnAlerts
     Exit Sub
 
-' エラー処理用のラベル
-ErrHandler:
-    ' エラーの詳細状況を表示する
+HandleErr:
     MsgBox "自動バックアップの作成中にエラーが発生しました。" & vbCrLf & _
-           "保存先: " & backupFolder & vbCrLf & _
-           "詳細状況: " & Err.Description, vbExclamation, "ファイル保管"
-    ' 確認メッセージの表示をオンに戻す
-    Application.DisplayAlerts = True
-' プロシージャを終了する
+           "保存先：" & strBackupFolder & vbCrLf & _
+           "エラー番号：" & Err.Number & vbCrLf & _
+           "内容：" & Err.Description, vbExclamation, "VA領収書等ファイル保管"
+    Resume Cleanup
 End Sub
+
+'--------------------------------------------------------------------------------
+' 概要：ブックのファイル名から、バックアップの写しの名前に使う部分を返す。
+'       拡張子を除き、末尾が版（「Ver」と英数字3文字）なら、それも除く。
+'       例：「領収書等ファイル保管VerNNN.xlsm」→「領収書等ファイル保管」、「領収書等ファイル保管.xlsm」→「領収書等ファイル保管」
+' 引数：strFileName - ブックのファイル名
+' 戻り値：写しの名前に使う部分
+'--------------------------------------------------------------------------------
+Private Function GetBackupBaseName(ByVal strFileName As String) As String
+    Dim strBase As String   '拡張子を除いた名前
+    Dim lngDot As Long      '最後の「.」の位置
+
+    '拡張子（最後の「.」から後ろ）を除く
+    lngDot = InStrRev(strFileName, ".")
+    If lngDot > 1 Then
+        strBase = Left(strFileName, lngDot - 1)
+    Else
+        strBase = strFileName
+    End If
+
+    '末尾の版（例：Ver403、VerA05）を除く
+    If strBase Like "*Ver[0-9A-Z][0-9A-Z][0-9A-Z]" Then strBase = Left(strBase, Len(strBase) - 6)
+
+    GetBackupBaseName = strBase
+End Function
 

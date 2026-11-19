@@ -50,7 +50,7 @@ End Function
 Public Function SelectFolder(ByVal title As String) As String
     Dim dialog As Object
     Set dialog = Application.FileDialog(4) ' msoFileDialogFolderPicker
-    dialog.Title = title
+    dialog.title = title
     dialog.AllowMultiSelect = False
     If dialog.Show = -1 Then
         SelectFolder = dialog.SelectedItems(1)
