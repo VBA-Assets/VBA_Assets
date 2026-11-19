@@ -3,8 +3,8 @@ Option Explicit
 '外部ツール由来要素の一括整形を確認するメッセージ
 Private Const strCleanupMessage As String = "外部ツール由来の要素（手動改行・リンク・WikiLink・フロントマター・水平線・強調記号）が検知されました。Wordに最適な形式へ一括整形しますか？（先頭のフロントマターと水平線の段落は削除され、強調記号は取り除かれます）"
 
-'共通の前処理（BeginProcess）で開始・退避し、共通の後処理（EndProcess）で終了・復元する状態
-Private blnUndoRecordStarted As Boolean ' 元に戻す（Undo）の記録を開始したかどうか
+'共通の前処理（BeginProcess）で退避し、共通の後処理（EndProcess）で復元する状態
+Private blnScreenUpdating As Boolean ' 退避した画面表示の設定値
 Private blnSmartCutPaste As Boolean ' 退避したスマート カット アンド ペーストの設定値
 Private blnSmartCutPasteSaved As Boolean ' スマート カット アンド ペーストの設定値を退避できたかどうか
 
@@ -13,17 +13,18 @@ Private blnSmartCutPasteSaved As Boolean ' スマート カット アンド ペ�
 '================================================================================
 
 ' 機能: リボンから「ニュートラル」を実行するコールバック
-Sub rxChangeToNeutral(control As IRibbonControl)
+' 引数: control - 押されたボタン（参照設定に頼らないよう Object で受けます）
+Sub rxChangeToNeutral(ByVal control As Object)
     Call ChangeToNeutral
 End Sub
 
 ' 機能: リボンから「マークダウン」を実行するコールバック
-Sub rxChangeToMarkdown(control As IRibbonControl)
+Sub rxChangeToMarkdown(ByVal control As Object)
     Call ChangeToMarkdown
 End Sub
 
 ' 機能: リボンから「アウトライン」を実行するコールバック
-Sub rxChangeToOutline(control As IRibbonControl)
+Sub rxChangeToOutline(ByVal control As Object)
     Call ChangeToOutline
 End Sub
 
@@ -47,7 +48,7 @@ Sub ChangeToNeutral()
 
     '--- 前処理 ---
     '「行間詰め」スタイルの適用を行う場合は、表のスタイルと行頭の空白の処理を行わない
-    Call BeginProcess("ニュートラル", Not blnBlockStyle)
+    Call BeginProcess(Not blnBlockStyle)
 
     '--- 事前処理 ---
     '選択範囲の「行間詰め」スタイルの適用を行う場合
@@ -125,7 +126,7 @@ Sub ChangeToMarkdown()
     On Error GoTo HandleErr
 
     '--- 前処理 ---
-    Call BeginProcess("マークダウン", True)
+    Call BeginProcess(True)
 
     '--- メイン処理 ---
     Dim pars As Paragraphs
@@ -172,7 +173,7 @@ Sub ChangeToOutline()
     On Error GoTo HandleErr
 
     '--- 前処理 ---
-    Call BeginProcess("アウトライン", True)
+    Call BeginProcess(True)
 
     '--- メイン処理 ---
     Dim pars As Paragraphs
@@ -234,19 +235,19 @@ End Sub
 ' 機能:         3つの変換処理（ニュートラル、マークダウン、アウトライン）に共通の
 '               前処理を行います。
 '               1. 外部ツール由来要素の検知と、一括整形の確認
-'               2. 元に戻す（Undo）の記録の開始（処理全体を Ctrl+Z 1回で戻せるようにする）
-'               3. スマート カット アンド ペーストの設定の退避と無効化
-'               4. マウスポインタのウエイト表示と画面表示の停止
-'               5. 外部ツール由来要素の一括整形
-'               6. 表内の段落への「行間詰め」スタイルの適用と、行頭の空白のインデント化
+'               2. スマート カット アンド ペーストの設定の退避と無効化
+'               3. マウスポインタのウエイト表示と、画面表示の設定の退避と停止
+'               4. 外部ツール由来要素の一括整形
+'               5. 表内の段落への「行間詰め」スタイルの適用と、行頭の空白のインデント化
+'               元に戻す（Undo）の記録（Application.UndoRecord）は使いません。記録の中で「すべて置換」を
+'               行うと、Word が強制終了するためです（2026-10-17。標準 03「安定性」）。
 '               エラーが起きた場合は、呼び出し元へエラーを伝えます。
 '               （On Error GoTo 0 で抜けると、呼び出し元のエラー処理に戻らず
 '                 マクロが停止し、EndProcess が呼ばれないため）
 '               呼び出し元の Cleanup で、必ず EndProcess を呼んでください。
-' 引数:         strProcessName - 元に戻す（Undo）の一覧に表示する処理名
-'               blnPreFormat - True の場合は、6. の処理を行う
+' 引数:         blnPreFormat - True の場合は、5. の処理を行う
 '================================================================================
-Private Sub BeginProcess(ByVal strProcessName As String, ByVal blnPreFormat As Boolean)
+Private Sub BeginProcess(ByVal blnPreFormat As Boolean)
     'エラーのトラップを有効にする
     On Error GoTo HandleErr
 
@@ -266,23 +267,11 @@ Private Sub BeginProcess(ByVal strProcessName As String, ByVal blnPreFormat As B
         'アクティブドキュメント内に外部ツール由来の特殊要素が存在する場合
         If formatter.DetectExternalElements(ActiveDocument) Then
             '一括整形を実行するかどうかをユーザーに確認する
-            blnCleanup = (MsgBox(strCleanupMessage, vbYesNo + vbQuestion, "VA公用文") = vbYes)
+            blnCleanup = (MsgBox(strCleanupMessage, vbYesNo + vbQuestion, strAppTitle) = vbYes)
         End If
     End If
 
-    '--- 2. 元に戻す（Undo）の記録の開始 ---
-    '確認メッセージの後、整形の前に開始し、整形も含めて Ctrl+Z 1回で戻せるようにする
-    '（Mac版で未対応の場合に備え、エラーは無視して処理を続行する）
-    If blnUseUndoRecord Then
-        On Error Resume Next
-        Application.UndoRecord.StartCustomRecord "VA公用文：" & strProcessName
-        blnUndoRecordStarted = (Err.Number = 0)
-        Err.Clear
-        '自前のエラー処理に戻す（On Error GoTo 0 にすると、呼び出し元へ戻らずに停止する）
-        On Error GoTo HandleErr
-    End If
-
-    '--- 3. スマート カット アンド ペーストの設定の退避と無効化 ---
+    '--- 2. スマート カット アンド ペーストの設定の退避と無効化 ---
     '有効なままだと、Range.Delete で行頭の半角空白が削除されないことがあるため
     '（Mac版で未対応の場合に備え、取得・設定のエラーは無視する）
     On Error Resume Next
@@ -293,19 +282,20 @@ Private Sub BeginProcess(ByVal strProcessName As String, ByVal blnPreFormat As B
     '自前のエラー処理に戻す
     On Error GoTo HandleErr
 
-    '--- 4. マウスポインタと画面表示 ---
+    '--- 3. マウスポインタと画面表示 ---
     'マウスポインタをウエイト表示にする
     Application.System.Cursor = wdCursorWait
-    '画面表示を停止する
+    '画面表示の設定を退避してから、画面表示を停止する（EndProcess で、退避した値に戻す）
+    blnScreenUpdating = Application.ScreenUpdating
     Application.ScreenUpdating = False
 
-    '--- 5. 外部ツール由来要素の一括整形 ---
+    '--- 4. 外部ツール由来要素の一括整形 ---
     If blnCleanup Then
         '一括整形の処理を呼び出し、不要な要素を除去・変換する
         formatter.ExecuteSimpleCleanup ActiveDocument
     End If
 
-    '--- 6. 表のスタイルと行頭の空白 ---
+    '--- 5. 表のスタイルと行頭の空白 ---
     If blnPreFormat Then
         '表内の段落に「行間詰め」スタイルを適用する
         If blnApplyTableStyle = True Then
@@ -342,31 +332,23 @@ End Sub
 '================================================================================
 ' 機能:         BeginProcess に対応する共通の後処理を行います。
 '               正常終了・エラー終了の両方で、呼び出し元の Cleanup から必ず呼んでください。
-'               1. 元に戻す（Undo）の記録の終了
-'               2. スマート カット アンド ペーストの設定の復元
-'               3. 画面表示とマウスポインタの復帰
+'               1. スマート カット アンド ペーストの設定の復元
+'               2. 画面表示とマウスポインタの復帰
 '================================================================================
 Private Sub EndProcess()
     '後処理の途中でエラーが起きても、残りの後処理を必ず行う
     On Error Resume Next
 
-    '--- 1. 元に戻す（Undo）の記録の終了 ---
-    '記録を開始した場合のみ終了する
-    If blnUndoRecordStarted Then
-        Application.UndoRecord.EndCustomRecord
-        blnUndoRecordStarted = False
-    End If
-
-    '--- 2. スマート カット アンド ペーストの設定の復元 ---
+    '--- 1. スマート カット アンド ペーストの設定の復元 ---
     '設定値を退避できた場合のみ元に戻す
     If blnSmartCutPasteSaved Then
         Options.SmartCutPaste = blnSmartCutPaste
         blnSmartCutPasteSaved = False
     End If
 
-    '--- 3. 画面表示とマウスポインタ ---
-    '画面表示を再開する
-    Application.ScreenUpdating = True
+    '--- 2. 画面表示とマウスポインタ ---
+    '画面表示を、処理の前の設定に戻す
+    Application.ScreenUpdating = blnScreenUpdating
     'マウスポインタを標準に戻す
     Application.System.Cursor = wdCursorNormal
 End Sub
@@ -388,12 +370,12 @@ Private Sub ApplyBlockStyle()
     '選択範囲の最初の段落のスタイルを確認して、動作を決定する
     If pars(1).Style.NameLocal = "行間詰め" Then
         'メッセージを表示する
-        If MsgBox("選択範囲の段落スタイルを「標準」に変更します。", vbOKCancel, "VA公用文") = vbCancel Then Exit Sub
+        If MsgBox("選択範囲の段落スタイルを「標準」に変更します。", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then Exit Sub
         '変更スタイルを「標準」に設定する
         strNewStyle = "標準"
     Else
         'メッセージを表示する
-        If MsgBox("選択範囲の段落スタイルを「行間詰め」に変更します。", vbOKCancel, "VA公用文") = vbCancel Then Exit Sub
+        If MsgBox("選択範囲の段落スタイルを「行間詰め」に変更します。", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then Exit Sub
         '変更スタイルを「行間詰め」に設定する
         strNewStyle = "行間詰め"
     End If

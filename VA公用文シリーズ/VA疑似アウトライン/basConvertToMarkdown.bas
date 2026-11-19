@@ -11,47 +11,29 @@ Private Variables As VariablesManager
 ' 機能: 現在開いているWord文書の疑似アウトライン（インデントや特定の記号で
 '       表現された階層構造）を解析し、マークダウン形式のテキストに変換します。
 '       同時に、本文のフォントや段落書式を標準スタイルにリセットします。
-' 引数: blnDammy (Boolean, Optional):
+' 引数: blnDummy (Boolean, Optional):
 '       Wordの「マクロ」ダイアログボックスにこのマクロが表示されるのを
 '       防ぐためのダミー引数です。
 '================================================================================
-Sub ConvertToMarkdown(Optional blnDammy As Boolean)
+Sub ConvertToMarkdown(Optional ByVal blnDummy As Boolean = False)
     ' 変数管理クラス（VariablesManager）の新しいインスタンスを生成する
     Set Variables = New VariablesManager
 
-    ' 確認メッセージに表示する、元に戻せるかどうかの案内を設定する
-    Dim strUndoMessage As String
-    If blnUseUndoRecord Then
-        ' 元に戻す（Undo）の記録を行う場合
-        strUndoMessage = "Ctrl+Zで元に戻せます。"
-    Else
-        ' 元に戻す（Undo）の記録を行わない場合（Mac版の既定）
-        strUndoMessage = "元に戻せない可能性があります。"
-    End If
-
     ' ユーザーに処理の開始を確認する（キャンセルされた場合は処理を抜ける）
+    ' 変換は Ctrl+Z 1回では戻せないため、実行の前に確かめる（元に戻す記録 UndoRecord は、Word が落ちるため使わない）
     If MsgBox("マークダウンへの変換およびフォント・段落書式のリセットを開始します。" & vbCr & _
-        strUndoMessage & vbCr & vbCr & _
-        "よろしいですか？", vbOKCancel, "マークダウンへの変換") = vbCancel Then Exit Sub
+        "元に戻せない可能性があります。" & vbCr & vbCr & _
+        "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then Exit Sub
+
+    ' 画面の描画更新の設定を退避する（終了処理で、この値に戻す）
+    Dim blnScreenUpdating As Boolean
+    blnScreenUpdating = Application.ScreenUpdating
 
     ' ステータスバーに進捗状況を表示する（ユーザーへのフィードバック）
     Application.StatusBar = "マークダウンへの変換を準備しています。"
 
     ' 実行時エラーが発生した場合に、ラベル HandleErr へジャンプするよう設定
     On Error GoTo HandleErr
-
-    ' 元に戻す（Undo）の記録を開始し、変換全体を Ctrl+Z 1回で戻せるようにする
-    Dim blnUndoRecordStarted As Boolean
-    If blnUseUndoRecord Then
-        ' Mac版で未対応の場合に備え、エラーは無視して処理を続行する
-        On Error Resume Next
-        Application.UndoRecord.StartCustomRecord "VA疑似アウトライン：マークダウン"
-        ' 記録を開始できたかどうかを記憶する（終了処理で記録を閉じるため）
-        blnUndoRecordStarted = (Err.Number = 0)
-        Err.Clear
-        ' ラベル HandleErr へジャンプする設定に戻す
-        On Error GoTo HandleErr
-    End If
 
     ' 処理速度向上のため、画面の描画更新を停止する
     Application.ScreenUpdating = False
@@ -82,6 +64,24 @@ Sub ConvertToMarkdown(Optional blnDammy As Boolean)
         Set objPreFormatter = Nothing
     End If
     
+    '--- スマート カット アンド ペーストの設定の退避 ---
+    ' 有効なままだと、「(」の前などの半角空白が Range.Delete で削除されないことがあるため、
+    ' 現在の設定を退避してから無効にする（終了処理で必ず元に戻す）
+    Dim blnSmartCutPaste As Boolean      ' 退避した設定値
+    Dim blnSmartCutPasteSaved As Boolean ' 設定値を退避できたかどうか
+
+    ' Mac版で未対応の場合に備え、取得・設定のエラーは無視する
+    On Error Resume Next
+    ' 現在の設定を退避する
+    blnSmartCutPaste = Options.SmartCutPaste
+    ' 退避できたかどうかを記録する
+    blnSmartCutPasteSaved = (Err.Number = 0)
+    ' スマート カット アンド ペーストを無効にする
+    Options.SmartCutPaste = False
+    Err.Clear
+    ' ラベル HandleErr へジャンプする設定に戻す
+    On Error GoTo HandleErr
+
     '--- 処理1: 複合見出しの処理を実行 ---
     Call ProcessCompositeHeadings
     
@@ -92,10 +92,10 @@ Cleanup:
     ' 終了処理ラベル
     ' 終了処理の途中でエラーが起きても、残りの終了処理を必ず行う
     On Error Resume Next
-    ' 元に戻す（Undo）の記録を開始した場合のみ、記録を終了する
-    If blnUndoRecordStarted Then Application.UndoRecord.EndCustomRecord
-    ' 画面の描画更新を再開する
-    Application.ScreenUpdating = True
+    ' スマート カット アンド ペーストの設定を、処理開始前の状態に戻す（正常終了・エラー終了の両方で必ず行う）
+    If blnSmartCutPasteSaved Then Options.SmartCutPaste = blnSmartCutPaste
+    ' 画面の描画更新を、処理開始前の状態に戻す
+    Application.ScreenUpdating = blnScreenUpdating
     ' ステータスバーの表示をクリアする
     Application.StatusBar = ""
     ' マウスポインタを通常の状態に戻す
@@ -108,7 +108,8 @@ Cleanup:
 ' エラー発生時の処理ラベル
 HandleErr:
     ' エラーメッセージを表示する
-    MsgBox "エラーが発生したため、処理を停止しました。", vbOKOnly, "VA書式修正"
+    MsgBox "エラーが発生したため、処理を停止しました。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbOKOnly + vbExclamation, strAppTitle
     ' Cleanupラベルへ移動して終了処理を行う（Resumeによりエラー状態をクリア）
     Resume Cleanup
 End Sub
@@ -168,17 +169,10 @@ Repeat:
                                 .First.Delete
                             ' 1文字目が半角スペースの場合
                             ElseIf .First = " " Then
-                            ' Wordの仕様対策: 「(」の前の半角スペースは .Delete メソッドで消えない場合があるため、
-                            ' カーソル操作とBackSpaceキー入力で強制的に削除する
-                            ' 参考: https://vba-assets.net/delete-half-width-space/
-                                ' 1文字目を選択する
-                                .First.Select
-                                
-                                ' カーソルを右（文字の後ろ）に移動する
-                                Selection.MoveRight
-                                
-                                ' BackSpaceキー入力をシミュレートして削除する
-                                Selection.TypeBackspace
+                                ' 「(」の前の半角スペースは、スマート カット アンド ペーストが有効だと .Delete で
+                                ' 消えないことがある。ConvertToMarkdown で無効にしてあるので、Range で削除する
+                                ' 参考: https://vba-assets.net/delete-half-width-space/
+                                .First.Delete
                             Else
                                 ' 空白以外が現れたらループを抜ける（行頭の空白処理終了）
                                 Exit For
@@ -631,11 +625,9 @@ Private Sub ConvertToMarkdownSyntax()
                         ' 先頭が全角スペースやピリオドの場合
                         If .First = "　" Or .First = "." Or .First = "．" Then
                             .First.Delete
-                        ' 先頭が半角スペースの場合（BackSpaceトリック使用）
+                        ' 先頭が半角スペースの場合（スマート カット アンド ペーストを無効にしてあるので、Range で削除する）
                         ElseIf .First = " " Then
-                            .First.Select
-                            Selection.MoveRight
-                            Selection.TypeBackspace
+                            .First.Delete
                         Else
                             ' 不要文字がなくなったら終了
                             Exit For

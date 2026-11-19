@@ -53,7 +53,7 @@ Private Sub LoadProjects()
     cboProjectList.Clear
     Set m_Projects = New Collection
 
-    For i = 1 To vbProjs.Count
+    For i = 1 To vbProjs.count
         Set proj = vbProjs(i)
         If proj.Protection = 0 Then
             validCount = validCount + 1
@@ -197,7 +197,7 @@ Private Sub CommandButton1_Click()
           "フォルダ: " & folderPath & vbCrLf & vbCrLf & _
           "全モジュールをファイルにエクスポートします。" & vbCrLf & _
           "よろしいですか？"
-    If MsgBox(msg, vbOKCancel + vbQuestion, "エクスポート確認") <> vbOK Then Exit Sub
+    If MsgBox(msg, vbOKCancel + vbQuestion, strAppTitle) <> vbOK Then Exit Sub
 
     If fName <> "" And fName <> "(未保存のドキュメント)" Then
         basUtility.SaveAppSetting "LastSelectedProject", fName
@@ -235,7 +235,7 @@ Private Sub CommandButton2_Click()
 
     If Not basUtility.FileExists(folderPath & "manifest.json") Then
         MsgBox "manifest.json が見つかりません。" & vbCrLf & _
-               "フォルダ: " & folderPath, vbExclamation
+               "フォルダ: " & folderPath, vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -245,8 +245,8 @@ Private Sub CommandButton2_Click()
     Dim modules As Collection
     Set modules = basJson.ParseManifestModules(manifestStr)
 
-    If modules.Count = 0 Then
-        MsgBox "インポート可能なモジュールが見つかりません。", vbExclamation
+    If modules.count = 0 Then
+        MsgBox "インポート可能なモジュールが見つかりません。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -254,7 +254,7 @@ Private Sub CommandButton2_Click()
     Dim displayCount As Long
     Dim i As Long
     displayCount = 0
-    For i = 1 To modules.Count
+    For i = 1 To modules.count
         Dim item As Object
         Set item = modules(i)
         Dim modName As String
@@ -279,7 +279,7 @@ Private Sub CommandButton2_Click()
           "※警告: 既存の同名モジュールは上書きされます。" & vbCrLf & _
           "実行してよろしいですか？"
 
-    If MsgBox(msg, vbOKCancel + vbExclamation + vbDefaultButton2, "インポート実行の最終確認") <> vbOK Then
+    If MsgBox(msg, vbOKCancel + vbQuestion + vbDefaultButton2, strAppTitle) <> vbOK Then
         Exit Sub
     End If
 
@@ -297,7 +297,7 @@ End Sub
 '--------------------------------------------------------------------------------
 Private Function GetSelectedProject() As Object
     If cboProjectList.ListIndex = -1 Then
-        MsgBox "プロジェクトを選択してください。", vbExclamation
+        MsgBox "プロジェクトを選択してください。", vbExclamation, strAppTitle
         Set GetSelectedProject = Nothing
         Exit Function
     End If

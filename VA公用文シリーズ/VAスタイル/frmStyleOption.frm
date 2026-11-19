@@ -3,7 +3,7 @@
 '//
 '// 概要: このモジュールは、ユーザーフォームの初期化、OKボタン、キャンセルボタンの
 '//       クリックイベントを管理します。設定値はVariablesManagerクラスを通じて
-'//       グローバルに管理され、SettingsManagerクラスを通じてファイルに保存されます。
+'//       グローバルに管理され、SettingsManagerクラスを通じてアドイン自身の文書プロパティに保存されます。
 '//==================================================================================================
 Option Explicit
 
@@ -66,48 +66,48 @@ End Sub
 '// 機能:       「OK」ボタンがクリックされたときの処理を実行します。
 '//
 '// 概要:       各チェックボックスの状態を読み取り、VariablesManagerの設定値を更新します。
-'//             その後、SettingsManagerを使用して設定をファイルに保存し、フォームを閉じます。
+'//             その後、SettingsManagerを使用して設定をアドイン自身の文書プロパティに保存し、フォームを閉じます。
 '//==================================================================================================
 Private Sub CommandButton1_Click()
     '変数オブジェクトを生成する
     Set Variables = New VariablesManager
     
     '--- 「フォントをゴシックにする」の設定を更新 ---
-    If CheckBox1.value = True Then
+    If CheckBox1.Value = True Then
         Variables.strChangeFontType = "Enable"
     Else
         Variables.strChangeFontType = "Disable"
     End If
     
     '--- 「フォントを拡大する」の設定を更新 ---
-    If CheckBox2.value = True Then
+    If CheckBox2.Value = True Then
         Variables.strChangeFontSize = "Enable"
     Else
         Variables.strChangeFontSize = "Disable"
     End If
     
     '--- 「段落前に間隔を1行空ける」の設定を更新 ---
-    If CheckBox11.value = True Then
+    If CheckBox11.Value = True Then
         Variables.strLineUnitBeforeOne = "Enable"
     Else
         Variables.strLineUnitBeforeOne = "Disable"
     End If
     
     '--- 「次の段落と分離しない」の設定を更新 ---
-    If CheckBox12.value = True Then
+    If CheckBox12.Value = True Then
         Variables.strKeepParagraphWithNext = "Enable"
     Else
         Variables.strKeepParagraphWithNext = "Disable"
     End If
     
     '--- 「段落を分割しない」の設定を更新 ---
-    If CheckBox13.value = True Then
+    If CheckBox13.Value = True Then
         Variables.strKeepParagraphTogether = "Enable"
     Else
         Variables.strKeepParagraphTogether = "Disable"
     End If
     
-    '--- 設定をファイルに保存する準備 ---
+    '--- 設定を保存する準備 ---
     Dim varKeys(1 To 5) As Variant
     Dim varValues(1 To 5) As Variant
     
@@ -127,7 +127,7 @@ Private Sub CommandButton1_Click()
     varKeys(5) = "Paragraph Split"
     varValues(5) = Variables.strKeepParagraphTogether
     
-    ' SettingsManagerクラスのメソッドを呼び出して設定をファイルに保存
+    ' SettingsManagerクラスのメソッドを呼び出して設定をアドイン自身の文書プロパティに保存
     Dim settingsMgr As New SettingsManager
     settingsMgr.SaveSettingsToProperty varKeys, varValues
     Set settingsMgr = Nothing

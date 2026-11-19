@@ -29,7 +29,7 @@ Public Function ParseManifestModules(ByVal manifestJson As String) As Collection
         Exit Function
     End If
 
-    For i = 1 To modulesArr.Count
+    For i = 1 To modulesArr.count
         result.Add modulesArr(i)
     Next i
 

@@ -5,7 +5,7 @@ Option Explicit
 ' 引数 : TargetProj - インポート対象のVBProjectオブジェクト
 '         FolderPath - 入力元フォルダパス（manifest.json が存在すること）
 '--------------------------------------------------------------------------------
-Public Sub ImportModulesFromFiles(ByVal TargetProj As Object, ByVal FolderPath As String)
+Public Sub ImportModulesFromFiles(ByVal TargetProj As Object, ByVal folderPath As String)
     Dim vbProj As Object
     Dim manifestPath As String
     Dim manifestStr As String
@@ -16,43 +16,43 @@ Public Sub ImportModulesFromFiles(ByVal TargetProj As Object, ByVal FolderPath A
     On Error GoTo ErrorHandler
 
     If TargetProj Is Nothing Then
-        MsgBox "対象プロジェクトが指定されていません。", vbExclamation
+        MsgBox "対象プロジェクトが指定されていません。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
     ' 自プロジェクトへのインポートは禁止（実行中のコードが破壊される）
     If TargetProj Is ThisDocument.VBProject Then
         MsgBox "VAコード自身へのインポートはできません。" & vbCrLf & _
-               "別のプロジェクトを選択してください。", vbExclamation
+               "別のプロジェクトを選択してください。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
     Set vbProj = TargetProj
 
     ' フォルダ末尾にセパレータを付加
-    If Right(FolderPath, 1) <> Application.PathSeparator Then
-        FolderPath = FolderPath & Application.PathSeparator
+    If Right(folderPath, 1) <> Application.PathSeparator Then
+        folderPath = folderPath & Application.PathSeparator
     End If
 
     ' manifest.json の読み込み
-    manifestPath = FolderPath & "manifest.json"
+    manifestPath = folderPath & "manifest.json"
     If Not basUtility.FileExists(manifestPath) Then
         MsgBox "manifest.json が見つかりません。" & vbCrLf & _
-               "フォルダ: " & FolderPath, vbExclamation
+               "フォルダ: " & folderPath, vbExclamation, strAppTitle
         Exit Sub
     End If
 
     manifestStr = basUtility.ReadTextFileUTF8(manifestPath)
     Set modules = basJson.ParseManifestModules(manifestStr)
 
-    If modules.Count = 0 Then
-        MsgBox "manifest.json にモジュール定義が見つかりません。", vbExclamation
+    If modules.count = 0 Then
+        MsgBox "manifest.json にモジュール定義が見つかりません。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
     ' インポート処理
     successCount = 0
-    For i = 1 To modules.Count
+    For i = 1 To modules.count
         Dim modInfo As Object
         Set modInfo = modules(i)
 
@@ -64,7 +64,7 @@ Public Sub ImportModulesFromFiles(ByVal TargetProj As Object, ByVal FolderPath A
         On Error GoTo 0
 
         Dim codeFilePath As String
-        codeFilePath = FolderPath & modFile
+        codeFilePath = folderPath & modFile
 
         If Not basUtility.FileExists(codeFilePath) Then
             Debug.Print "ファイルが見つかりません: " & codeFilePath
@@ -78,13 +78,13 @@ Public Sub ImportModulesFromFiles(ByVal TargetProj As Object, ByVal FolderPath A
     Next i
 
     MsgBox "処理完了" & vbCrLf & _
-           "インポート成功: " & successCount & " / " & modules.Count & vbCrLf & vbCrLf & _
-           "Ctrl+Sを押して、ファイルを保存してください。", vbInformation, "処理完了"
+           "インポート成功: " & successCount & " / " & modules.count & vbCrLf & vbCrLf & _
+           "Ctrl+Sを押して、ファイルを保存してください。", vbInformation, strAppTitle
     Exit Sub
 
 ErrorHandler:
     MsgBox "インポート中にエラーが発生しました。" & vbCrLf & _
-           "Error: " & Err.Number & vbCrLf & Err.Description, vbCritical
+           "Error: " & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
 End Sub
 
 '--------------------------------------------------------------------------------
@@ -172,3 +172,4 @@ Private Function GetVBComponentType(typeStr As String) As Integer
         Case Else:        GetVBComponentType = 1
     End Select
 End Function
+

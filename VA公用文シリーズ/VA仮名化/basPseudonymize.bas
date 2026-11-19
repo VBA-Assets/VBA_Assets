@@ -5,9 +5,9 @@ Option Explicit
 '                 対象外です。
 '==================================================================================================
 
-'共通の前処理（BeginProcess）で開始・退避し、共通の後処理（EndProcess）で終了・復元する状態
+'共通の前処理（BeginProcess）で退避し、共通の後処理（EndProcess）で復元する状態
 Private docProcess As Document ' 処理の対象の文書
-Private blnUndoRecordStarted As Boolean ' 元に戻す（Undo）の記録を開始したかどうか
+Private blnScreenUpdating As Boolean ' 退避した画面表示の設定値
 Private blnTrackRevisions As Boolean ' 退避した変更履歴の記録の設定値
 Private blnTrackRevisionsSaved As Boolean ' 変更履歴の記録の設定値を退避できたかどうか
 
@@ -19,17 +19,18 @@ Private strLastType As String
 '================================================================================
 
 ' 機能: リボンから「仮名」（文書全体を仮名化）を実行するコールバック
-Sub rxPseudonymize(control As IRibbonControl)
+' 引数: control - 押されたボタン（参照設定に頼らないよう Object で受けます）
+Sub rxPseudonymize(ByVal control As Object)
     Call Pseudonymize
 End Sub
 
 ' 機能: リボンから「実名」（文書全体を実名に戻す）を実行するコールバック
-Sub rxRestore(control As IRibbonControl)
+Sub rxRestore(ByVal control As Object)
     Call Restore
 End Sub
 
 ' 機能: リボンから「選んだ語を仮名化」を実行するコールバック
-Sub rxRegisterWord(control As IRibbonControl)
+Sub rxRegisterWord(ByVal control As Object)
     Call RegisterSelectedWord
 End Sub
 
@@ -73,7 +74,7 @@ Sub Pseudonymize()
     End If
 
     '--- 前処理 ---
-    Call BeginProcess(doc, "仮名化")
+    Call BeginProcess(doc)
 
     '--- メイン処理 ---
     '語の長い順の並びを求める
@@ -146,7 +147,7 @@ Sub Restore()
     End If
 
     '--- 前処理 ---
-    Call BeginProcess(doc, "実名に戻す")
+    Call BeginProcess(doc)
 
     '--- メイン処理 ---
     'すべての項目を繰り返す
@@ -242,7 +243,7 @@ Sub RegisterSelectedWord()
                   "仮名化を解除しますか？（文書のこの記号は、元の語に戻ります）", vbYesNo + vbQuestion, strAppTitle) = vbNo Then GoTo Cleanup
 
         '前処理
-        Call BeginProcess(doc, "仮名化の解除")
+        Call BeginProcess(doc)
         '文書の記号を元の語に戻す（解除すると元に戻せなくなるため）
         Call RestoreToken(doc, strToken, strWord)
         '辞書から削除する
@@ -274,7 +275,7 @@ Sub RegisterSelectedWord()
     End If
 
     '前処理
-    Call BeginProcess(doc, "選んだ語の仮名化")
+    Call BeginProcess(doc)
     '辞書に追加する
     strToken = basDictionary.AddEntry(doc, strType, strText)
     '文書のその語を、すぐ記号（赤字）に置き換える
@@ -440,38 +441,33 @@ End Function
 
 '================================================================================
 ' 機能:         仮名化・実名に戻す・語の登録に共通の前処理を行います。
-'               1. 元に戻す（Undo）の記録の開始（処理全体を Ctrl+Z 1回で戻せるようにする）
-'               2. 変更履歴の記録の設定の退避と無効化（置き換えが変更履歴に残らないようにする）
-'               3. マウスポインタのウエイト表示と画面表示の停止
+'               1. 変更履歴の記録の設定の退避と無効化（置き換えが変更履歴に残らないようにする）
+'               2. マウスポインタのウエイト表示と、画面表示の設定の退避と停止
 '               呼び出し元の Cleanup で、必ず EndProcess を呼んでください。
+'               元に戻す（Undo）の記録（Application.UndoRecord）は使いません。記録の中で「すべて置換」を
+'               行うと、文書によっては Word が強制終了するためです（2026-10-17。標準 03「安定性」）。
+'               そのため、Ctrl+Z で戻すときは、置き換えた語ごとに1回ずつになります。
 ' 引数:         doc - 対象の文書
-'               strProcessName - 元に戻す（Undo）の一覧に表示する処理名
 '================================================================================
-Private Sub BeginProcess(ByVal doc As Document, ByVal strProcessName As String)
+Private Sub BeginProcess(ByVal doc As Document)
     '対象の文書を退避する（EndProcess で変更履歴の記録の設定を戻すため）
     Set docProcess = doc
 
     '設定の取得・変更のエラーは無視して処理を続行する（Mac版で未対応の場合に備える）
     On Error Resume Next
 
-    '--- 1. 元に戻す（Undo）の記録の開始 ---
-    If blnUseUndoRecord Then
-        Application.UndoRecord.StartCustomRecord "VA仮名化：" & strProcessName
-        blnUndoRecordStarted = (Err.Number = 0)
-        Err.Clear
-    End If
-
-    '--- 2. 変更履歴の記録の設定の退避と無効化 ---
+    '--- 1. 変更履歴の記録の設定の退避と無効化 ---
     blnTrackRevisions = doc.TrackRevisions
     blnTrackRevisionsSaved = (Err.Number = 0)
     Err.Clear
     doc.TrackRevisions = False
     Err.Clear
 
-    '--- 3. マウスポインタと画面表示 ---
+    '--- 2. マウスポインタと画面表示 ---
     'マウスポインタをウエイト表示にする
     Application.System.Cursor = wdCursorWait
-    '画面表示を停止する
+    '画面表示の設定を退避してから、画面表示を停止する（EndProcess で、退避した値に戻す）
+    blnScreenUpdating = Application.ScreenUpdating
     Application.ScreenUpdating = False
     Err.Clear
 End Sub
@@ -481,8 +477,7 @@ End Sub
 '               正常終了・エラー終了の両方で、呼び出し元の Cleanup から必ず呼んでください。
 '               （BeginProcess を呼ぶ前に Cleanup に進んだ場合も、問題なく終了します）
 '               1. 変更履歴の記録の設定の復元
-'               2. 元に戻す（Undo）の記録の終了
-'               3. 画面表示とマウスポインタの復帰
+'               2. 画面表示とマウスポインタの復帰
 '================================================================================
 Private Sub EndProcess()
     '後処理の途中でエラーが起きても、残りの後処理を必ず行う
@@ -495,16 +490,14 @@ Private Sub EndProcess()
         blnTrackRevisionsSaved = False
     End If
 
-    '--- 2. 元に戻す（Undo）の記録の終了 ---
-    '記録を開始した場合のみ終了する
-    If blnUndoRecordStarted Then
-        Application.UndoRecord.EndCustomRecord
-        blnUndoRecordStarted = False
+    '--- 2. 画面表示とマウスポインタ ---
+    '画面表示を、処理の前の設定に戻す
+    '（BeginProcess を呼ぶ前に来たときは、退避していないので再開する）
+    If docProcess Is Nothing Then
+        Application.ScreenUpdating = True
+    Else
+        Application.ScreenUpdating = blnScreenUpdating
     End If
-
-    '--- 3. 画面表示とマウスポインタ ---
-    '画面表示を再開する
-    Application.ScreenUpdating = True
     'マウスポインタを標準に戻す
     Application.System.Cursor = wdCursorNormal
 

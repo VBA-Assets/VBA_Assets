@@ -1,5 +1,10 @@
 '変数の宣言を強制するオプションを設定します。これにより、未宣言の変数の使用を防ぎます。
 Option Explicit
+'==================================================================================================
+'   概要        : 文書の1行の字数と1ページの行数が、内容証明郵便の条件を満たしているかを確かめます。
+'
+'   備考        : 制限値は cstSettings の strMaxCharsAndLines で変えられます。
+'==================================================================================================
 
 '-----------------------------------------------------------------------
 ' チェック実行プロシージャ
@@ -21,19 +26,31 @@ Sub CheckCharsAndLines()
     Dim sec As Section                      'ヘッダー・フッター削除処理でループするためのセクションオブジェクト変数
     Dim rngLine As Range                    '行のRangeオブジェクト
     Dim blnHeaderFooterDeleted As Boolean   'ヘッダー・フッターを削除したかどうかのフラグ
+    Dim blnSavedScreenUpdating As Boolean   '処理の前の画面の更新の設定（後処理で、この値に戻す）
+    Dim lngSavedCursor As Long              '処理の前のマウスポインタの形（後処理で、この形に戻す）
+    Dim strResultMsg As String              '後処理の後に表示するメッセージ
+    Dim lngResultIcon As Long               '後処理の後に表示するメッセージのアイコン
 
     '以下のWebサイトの情報を参考にロジックを構築しています
     'https://www.relief.jp/docs/word-vba-select-page.html
     'https://www.relief.jp/docs/word-vba-get-text-each-line.html
     'Word 2013以降の仕様変更（Rectangleへのアクセス時の例外発生）に対応するため、
-    'エラーハンドリングを用いて回避しています。
+    'Rectangleの行数を読む1行だけ、エラーを無視して回避しています。
     '参考: https://support.microsoft.com/ja-jp/topic/word-2013-でオートメーションから特定の種類のオブジェクトの_
     '-rectangletypプロパティにアクセスすると例外が発生する-5ac4c453-496e-eaf9-1b13-4c9379ecec24
 
+    '--- 前処理 ---
     'ユーザーに処理の開始を確認するメッセージボックスを表示します。
-    If MsgBox("内容証明郵便のチェックを開始します。", vbOKCancel, "VA内容証明郵便") = vbCancel Then
+    If MsgBox("内容証明郵便のチェックを開始します。", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then
         Exit Sub
     End If
+
+    '処理の前の画面の更新とマウスポインタを控えます（後処理で、この値に戻すため）。
+    blnSavedScreenUpdating = Application.ScreenUpdating
+    lngSavedCursor = Application.System.Cursor
+
+    'ここから後のエラーは、HandleErr で番号と内容を表示し、後処理（Cleanup）を必ず通します。
+    On Error GoTo HandleErr
 
     '処理中であることを視覚的に伝えるため、マウスポインタを待機状態にします。
     Application.System.Cursor = wdCursorWait
@@ -49,7 +66,7 @@ Sub CheckCharsAndLines()
     ' ヘッダーおよびフッターの削除処理
     '-----------------------------------------------------------------------
     blnHeaderFooterDeleted = False 'フラグを初期化
-    
+
     'ドキュメント内のすべてのセクションに対してループ処理を行います。
     For Each sec In ActiveDocument.Sections
         '各ヘッダー・フッターについて、内容があればフラグを立てて削除します
@@ -63,14 +80,15 @@ Sub CheckCharsAndLines()
 
     'ヘッダーまたはフッターが削除された場合、ユーザーに通知します
     If blnHeaderFooterDeleted Then
-        MsgBox "ヘッダーまたはフッターが設定されていたため、削除しました。", vbInformation, "VA内容証明郵便"
+        MsgBox "ヘッダーまたはフッターが設定されていたため、削除しました。", vbInformation, strAppTitle
     End If
 
+    '--- メイン処理 ---
     '設定値を読み込むための処理です。
     varMaxCharsAndLines = Split("," & strMaxCharsAndLines, ",")
     intMaxChars = varMaxCharsAndLines(1)
     intMaxLines = varMaxCharsAndLines(2)
-    
+
     '行ごとの詳細な結果表示（デバッグ用）は行わない設定にします。
     blnDispRslt = False
 
@@ -78,75 +96,71 @@ Sub CheckCharsAndLines()
     With ActiveWindow
         'ビューモードを「印刷レイアウト」表示に設定します（Rectangles取得に必須）。
         .View.Type = wdPrintView
-            
+
         'アクティブなウィンドウ枠（Pane）に対する操作を開始します。
         With .ActivePane
             'ドキュメントの総ページ数を取得します。
             lngLastPage = .Pages.Count
-            
+
             '1ページ目から最終ページまで、ページごとのループ処理を行います。
             For i = 1 To lngLastPage
                 lngLines = 0 'ページ内の行数カウンタをリセット
-                    
+
                 '現在のページに含まれるRectangleの総数を取得します。
                 lngLastRect = .Pages(i).Rectangles.Count
-                
+
                 'ページ内の各Rectangleに対してループ処理を行います。
                 For j = 1 To lngLastRect
-                    'エラーハンドリング（存在しないRectangleへのアクセス回避）
+                    '行数を読めないRectangle（Word 2013以降で例外になるもの）は、行数を0として飛ばします。
+                    lngLastLine = 0
+                    On Error Resume Next
+                    lngLastLine = .Pages(i).Rectangles(j).Lines.Count
                     On Error GoTo HandleErr
-                        lngLastLine = .Pages(i).Rectangles(j).Lines.Count
-                    On Error GoTo 0
-                   
+
                     'Rectangle内の各行に対してループ処理を行います。
                     For k = 1 To lngLastLine
                         '【リファクタリング】Selectを使用せず、直接Rangeオブジェクトを取得します。
                         'これにより処理速度が向上し、画面のちらつきを防止できます。
                         Set rngLine = .Pages(i).Rectangles(j).Lines(k).Range
                         strText = rngLine.Text
-                        
+
                         '【リファクタリング】文字数計算ロジックを関数に分離しました。
                         lngChars = GetAdjustedCharCount(strText)
-                        
+
                         '箇条書き等の段落番号が含まれる場合の補正処理
                         'Rectangle内の1行目であり、かつ箇条書き番号が存在する場合
                         If k = 1 And .Pages(i).Rectangles(j).Range.ListFormat.ListString <> "" Then
                             lngChars = lngChars + 1
                         End If
-                        
+
                         '文字数が0より大きい場合（空行でない場合）、有効な行としてカウントします。
                         If lngChars > 0 Then
                             lngLines = lngLines + 1
                         End If
-                    
+
                         'デバッグ用表示
                         If blnDispRslt = True Then
-                            MsgBox "行数: " & lngLines & vbCr & "字数：" & lngChars, vbOKOnly, "VA内容証明郵便"
+                            MsgBox "行数: " & lngLines & vbCr & "字数：" & lngChars, vbInformation, strAppTitle
                         End If
-                                            
+
                         '文字数チェック
                         If lngChars > intMaxChars Then
-                            'エラー時は画面更新を戻してからメッセージを表示
-                            Application.ScreenUpdating = True
-                            Application.System.Cursor = wdCursorNormal
-                            '該当箇所を選択してユーザーに場所を知らせる
+                            '該当箇所を選択してユーザーに場所を知らせ、後処理の後にメッセージを表示します
                             rngLine.Select
-                            MsgBox "字数が" & intMaxChars & "字を超えています。", vbCritical, "VA内容証明郵便"
-                            Exit Sub
+                            strResultMsg = "字数が" & intMaxChars & "字を超えています。"
+                            lngResultIcon = vbExclamation
+                            GoTo Cleanup
                         End If
                     Next
-'エラー発生時のジャンプ先ラベル
-Continue:
                 Next
-            
+
                 'ページ行数チェック
                 If lngLines > intMaxLines Then
-                    Application.ScreenUpdating = True
-                    Application.System.Cursor = wdCursorNormal
-                    'ページの先頭付近を選択（概算位置）
+                    'ページの先頭付近を選択（概算位置）し、後処理の後にメッセージを表示します
                     .Pages(i).Rectangles(1).Range.Select
-                    MsgBox "行数が" & intMaxLines & "行を超えています。", vbCritical, "VA内容証明郵便"
-                    Exit Sub
+                    strResultMsg = "行数が" & intMaxLines & "行を超えています。"
+                    lngResultIcon = vbExclamation
+                    GoTo Cleanup
                 End If
             Next
         End With
@@ -155,20 +169,33 @@ Continue:
     '選択範囲を解除し、カーソル位置のみの状態にします。
     Selection.Collapse
 
-    '画面更新を再開します。
-    Application.ScreenUpdating = True
-    'マウスポインタを元に戻します。
-    Application.System.Cursor = wdCursorNormal
+    '完了通知（後処理の後に表示します）
+    strResultMsg = "字数および行数のチェックを完了しました。"
+    lngResultIcon = vbInformation
+
+    '--- 後処理 ---
+Cleanup:
+    '途中で失敗しても、残りの後処理を必ず行います。
+    On Error Resume Next
+    '画面更新とマウスポインタを、処理の前の状態に戻し、ステータスバーの表示を消します。
+    Application.ScreenUpdating = blnSavedScreenUpdating
+    Application.System.Cursor = lngSavedCursor
     Application.StatusBar = ""
+    On Error GoTo 0
 
-    '完了通知
-    MsgBox "字数および行数のチェックを完了しました。", vbOKOnly, "VA内容証明郵便"
-
+    '結果のメッセージを表示します。
+    If strResultMsg <> "" Then
+        MsgBox strResultMsg, lngResultIcon, strAppTitle
+    End If
     Exit Sub
 
 'エラーハンドリング用ラベル
 HandleErr:
-    Resume Continue
+    '番号と内容を、後処理の後に表示します（利用者が不具合を伝えるときに使う）。
+    strResultMsg = "チェックの途中でエラーが起きました。" & vbCrLf & _
+                   "番号：" & Err.Number & vbCrLf & Err.Description
+    lngResultIcon = vbExclamation
+    Resume Cleanup
 
 End Sub
 
@@ -220,7 +247,8 @@ End Sub
 
 '-----------------------------------------------------------------------
 ' リボン用コールバックプロシージャ
+' 引数 control … 押されたボタン（参照設定に頼らないよう Object で受けます）
 '-----------------------------------------------------------------------
-Sub OnBtnCheckCharsAndLines(control As IRibbonControl)
+Sub OnBtnCheckCharsAndLines(ByVal control As Object)
     Call CheckCharsAndLines
 End Sub

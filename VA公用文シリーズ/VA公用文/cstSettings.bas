@@ -18,6 +18,9 @@ Option Explicit
 'すべてのモジュールで使用できるようにするため、Publicで宣言しています。
 'クラスモジュール内のプロシージャにより、変数化および配列化して用いられます。
 
+    'メッセージ
+    Public Const strAppTitle As String = "VA公用文"                    'メッセージのタイトル（デフォルト："VA公用文"）
+
 '準拠
 '資料1：「裁判文書（裁判所提出書類）の標準的な書式」http://www5d.biglobe.ne.jp/Jusl/Bunsyo/Suujihyouki2.html
 '資料2：「内容証明　ご利用の条件等」https://www.post.japanpost.jp/service/fuka_service/syomei/use.html
@@ -386,13 +389,9 @@ Option Explicit
     Public Const blnHeadingReset As Boolean = True              'セクション区切りで見出し番号を振り直す（デフォルト：True）
     Public Const blnApplyTableStyle As Boolean = True           '表内の段落に「行間詰め」スタイルを適用する（デフォルト：True）
     Public Const blnSelectionBlock As Boolean = True            '選択範囲の「行間詰め」スタイルの適用を行う（デフォルト：True）
-    Public Const blnConfigGallery = True                        'スタイルおよびリストのギャラリーから不要なスタイルを削除する（デフォルト：True）
+    Public Const blnConfigGallery As Boolean = True                        'スタイルおよびリストのギャラリーから不要なスタイルを削除する（デフォルト：True）
     Public Const blnReconfigOutline As Boolean = True           'インデント設定時に最初のアウトラインやリストの設定を適用する（デフォルト：True）
     Public Const blnEnableExternalCleanup As Boolean = True     '外部ツール由来要素（手動改行・リンク・WikiLink・フロントマター・水平線・強調記号）の一括整形を有効にする（デフォルト：True）
-    '変換（ニュートラル・マークダウン・アウトライン）を Ctrl+Z 1回で元に戻せるようにする（デフォルト：False）
-    '元に戻す（Undo）の記録（Application.UndoRecord）の中で「すべて置換」を行うと、Wordが強制終了するため（Word 16.0.20430 で確認。
-    '外部ツール由来要素の一括整形で必ず起きた）、Windows版・Mac版とも使わない。安定性を優先し、True にしないこと（Ver8D3）。
-    Public Const blnUseUndoRecord As Boolean = False
 
     'サンプル文面
         '裁判所提出書類、内容証明、公文書用

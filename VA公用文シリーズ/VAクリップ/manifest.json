@@ -1,7 +1,8 @@
 {
-  "project": "VAクリップ",
+  "project": "VA_Module",
   "modules": [
     {"name": "ThisDocument", "type": "Document", "file": "ThisDocument.bas"},
+    {"name": "cstSettings", "type": "Standard", "file": "cstSettings.bas"},
     {"name": "basMain", "type": "Standard", "file": "basMain.bas"},
     {"name": "basExport", "type": "Standard", "file": "basExport.bas"},
     {"name": "basImport", "type": "Standard", "file": "basImport.bas"},

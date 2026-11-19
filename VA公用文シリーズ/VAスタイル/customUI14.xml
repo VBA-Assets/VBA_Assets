@@ -1,0 +1,33 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" 
+          xmlns:va="VA_Shared_Namespace">
+  <ribbon>
+    <tabs>
+      <tab idQ="va:tabVA" 
+           label="VA">
+        <group id="grpVAStyle" 
+               label="VAスタイル">
+          <button id="btnBackward" 
+                  label="スタイル復元" 
+                  imageMso="AnimationMoveEarlier" 
+                  size="large" 
+                  onAction="RxBtnChangeBackward" 
+                  supertip="見出しレベルごと順次にスタイルを復元します。文字列が選択されている場合は傍点を設定／解除します。" />
+          <button id="btnForward" 
+                  label="スタイル変更" 
+                  imageMso="AnimationMoveLater" 
+                  size="large" 
+                  onAction="RxBtnChangeForward" 
+                  supertip="見出しレベルごと順次にスタイルを変更します。文字列が選択されている場合は太字を設定／解除します。" />
+          <separator id="sep1" />
+          <!-- 2文字の名前は、大きいボタンでは「設」「定」の2行に割れるので、末尾に改行の文字（&#13;）を入れて1行に収める（2026-11-19 班長指摘） -->
+          <button id="btnOption" 
+                  label="設定&#13;" 
+                  imageMso="CurrentViewSettings" 
+                  size="large" 
+                  onAction="RxBtnShowStyleOption" 
+                  supertip="変更するスタイルの設定の画面を表示します。" />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

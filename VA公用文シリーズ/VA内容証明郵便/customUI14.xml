@@ -1,0 +1,17 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" 
+          xmlns:va="VA_Shared_Namespace">
+  <ribbon>
+    <tabs>
+      <tab idQ="va:tabVA" label="VA">
+        <group id="grpContentMail" label="VA内容証明郵便">
+          <button id="btnCheck" 
+                  label="文字・行数チェック" 
+                  size="large" 
+                  imageMso="WordCount" 
+                  supertip="文書の文字数と行数が内容証明郵便の条件を満たしているかを確認します。"
+                  onAction="OnBtnCheckCharsAndLines"/>
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

@@ -34,7 +34,7 @@ End Sub
 
 '================================================================================
 ' 機能: マクロの動作に必要なすべてのプロパティ（変数）を設定します。
-'       まずプロパティをデフォルト値で初期化し、次いで設定ファイルから
+'       まずプロパティをデフォルト値で初期化し、次いでアドイン自身の文書プロパティから
 '       ユーザー設定を読み込んで上書きします。最終的に、選択された書式
 '       プリセットに基づき、各種配列を生成します。
 ' 引数: なし
@@ -48,7 +48,7 @@ Sub SetVariables()
     blnOneFullWidth = False
     blnNoParagraphSpace = False
     
-    'ファイルから設定を読み込む
+    'アドイン自身の文書プロパティから設定を読み込む
     Dim settingsMgr As New SettingsManager
     settingsMgr.LoadSettingsFromProperty varKeys, varValues
     Set settingsMgr = Nothing

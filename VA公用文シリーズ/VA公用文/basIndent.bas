@@ -320,7 +320,7 @@ Cleanup:
 'エラー発生時の処理を行う
 HandleErr:
     'エラーメッセージを表示する
-    MsgBox lngProcessedCount & "番目の段落付近でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, "VA公用文"
+    MsgBox lngProcessedCount & "番目の段落付近でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, strAppTitle
     'CleanUpセクションにジャンプして後処理を実行
     Resume Cleanup
 'インデント処理プロシージャを終了する

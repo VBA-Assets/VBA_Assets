@@ -10,23 +10,24 @@ Option Explicit
 ' リボンコールバック (Ribbon Callbacks)
 ' 機能: リボンXML (CustomUI) からのボタンクリックイベントを受け取り、
 '       対応する実処理プロシージャを呼び出します。
+'       引数 control は押されたボタンです（参照設定に頼らないよう Object で受けます）。
 '================================================================================
 
 ' リボンの「疑似アウトライン変換」ボタンが押された時の処理
 ' onAction="rxbtnFakeOutline_click"
-Sub rxbtnFakeOutline_click(control As IRibbonControl)
+Sub rxbtnFakeOutline_click(ByVal control As Object)
     Call ExecuteFakeOutline
 End Sub
 
 ' リボンの「マークダウン変換」ボタンが押された時の処理
 ' onAction="rxbtnMarkdown_click"
-Sub rxbtnMarkdown_click(control As IRibbonControl)
+Sub rxbtnMarkdown_click(ByVal control As Object)
     Call ExecuteMarkdown
 End Sub
 
 ' リボンの「設定」ボタンが押された時の処理
 ' onAction="rxbtnOption_click"
-Sub rxbtnOption_click(control As IRibbonControl)
+Sub rxbtnOption_click(ByVal control As Object)
     Call ShowConversionOption
 End Sub
 
@@ -38,7 +39,7 @@ End Sub
 
 '================================================================================
 ' ShowConversionOption
-' 機能: オプション設定用のユーザーフォーム「frmConvertOption」を表示します。
+' 機能: 設定の画面（frmConversionOption）を表示します。
 '================================================================================
 Sub ShowConversionOption()
     ' 設定用フォームをモーダルで表示する

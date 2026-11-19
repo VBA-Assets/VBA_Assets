@@ -17,7 +17,7 @@ Private Sub ShowImportExportMenu()
     On Error Resume Next
     frmStartMenu.Show
     If Err.Number <> 0 Then
-        MsgBox "フォーム 'frmStartMenu' が見つかりません。", vbCritical
+        MsgBox "フォーム 'frmStartMenu' が見つかりません。", vbExclamation, strAppTitle
     End If
     On Error GoTo 0
 End Sub

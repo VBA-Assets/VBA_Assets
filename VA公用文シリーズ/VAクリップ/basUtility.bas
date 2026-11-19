@@ -18,7 +18,7 @@ Public Sub SetClipboardText(ByVal Text As String)
     
     If Err.Number <> 0 Then
         MsgBox "クリップボードへのコピーに失敗しました。" & vbCrLf & _
-               "他のアプリがクリップボードを使用中の可能性があります。", vbExclamation
+               "他のアプリがクリップボードを使用中の可能性があります。", vbExclamation, strAppTitle
     End If
     On Error GoTo 0
 End Sub

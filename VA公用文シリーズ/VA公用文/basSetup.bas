@@ -6,8 +6,9 @@ Dim Variables As clsVariablesManager
 ' リボンコールバック (Ribbon Callbacks)
 '================================================================================
 
-' 機能: リボンから「セットアップ」を実行するコールバック
-Sub rxShowSetupMenu(control As IRibbonControl)
+' 機能: リボンから［設定］を実行するコールバック
+' 引数: control - 押されたボタン（参照設定に頼らないよう Object で受けます）
+Sub rxShowSetupMenu(ByVal control As Object)
     Call ShowSetupMenu
 End Sub
 
@@ -52,8 +53,8 @@ Sub ApplyFormatSettings(Optional blnDummy As Boolean)
     blnRestart = False  ' デフォルトは再起動しない
     
     '実行を確認する
-    If MsgBox("選択した設定で、現在のリスト、スタイルおよびページ設定を上書します。" & vbCrLf & vbCrLf & _
-        "よろしいですか？", vbOKCancel, "VA公用文") = vbCancel Then
+    If MsgBox("選択した設定で、現在のリスト、スタイルおよびページ設定を上書きします。" & vbCrLf & vbCrLf & _
+        "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then
         blnRestart = True   'フォームを再起動する
         GoTo Cleanup        'クリーンアップ処理へ
     End If
@@ -256,7 +257,7 @@ Private Sub ConfigPage()
         If blnDeleted Then
             MsgBox "マークダウン記号に「.」を使用するため、オートコレクトの「...」→「…」の自動変換を無効にしました。" & vbCr & _
                 "元に戻す場合は、Wordのオプション→文章校正→オートコレクトのオプションで「...」を再登録してください。", _
-                vbOKOnly + vbInformation, "VA公用文"
+                vbOKOnly + vbInformation, strAppTitle
         End If
     End If
 
@@ -265,7 +266,7 @@ Private Sub ConfigPage()
     Exit Sub
 
 HandleErr:
-    MsgBox "ページの設定でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, "VA公用文"
+    MsgBox "ページの設定でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, strAppTitle
 End Sub
 
 '================================================================================
@@ -445,7 +446,7 @@ Private Sub ConfigStyle()
     Exit Sub
 
 HandleErr:
-    MsgBox "スタイルの設定でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, "VA公用文"
+    MsgBox "スタイルの設定でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, strAppTitle
 End Sub
 
 '================================================================================
@@ -687,7 +688,7 @@ Cleanup:
     Exit Sub
 
 HandleErr:
-    MsgBox "ヘッダー及びフッターの設定でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, "VA公用文"
+    MsgBox "ヘッダー及びフッターの設定でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, strAppTitle
     Resume Cleanup
 End Sub
 
@@ -724,7 +725,7 @@ Private Sub InsertSample()
     If blnSampleExist Then
         '実行を確認する
         If MsgBox("現在のサンプルを上書きします。" & vbCrLf & vbCrLf & _
-            "よろしいですか？", vbOKCancel, "VA公用文") = vbCancel Then Exit Sub
+            "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then Exit Sub
             
         '既存のサンプルを削除する
         Dim rngDelete As Range
@@ -755,7 +756,7 @@ Private Sub InsertSample()
     Exit Sub
 
 HandleErr:
-    MsgBox "サンプルの追加でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, "VA公用文"
+    MsgBox "サンプルの追加でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, strAppTitle
 End Sub
 
 '================================================================================

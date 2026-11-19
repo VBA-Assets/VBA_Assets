@@ -182,7 +182,7 @@ Cleanup:
 
 'エラー発生時の処理を行う
 HandleErr:
-    MsgBox lngProcessedCount & "番目の段落付でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, "VA公用文"
+    MsgBox lngProcessedCount & "番目の段落付近でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, strAppTitle
     Resume Cleanup
 End Sub
 
@@ -402,7 +402,7 @@ Cleanup:
     Exit Sub
 
 HandleErr:
-    MsgBox lngProcessedCount & "番目の段落付でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, "VA公用文"
+    MsgBox lngProcessedCount & "番目の段落付近でエラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, strAppTitle
     Resume Cleanup
 End Sub
 

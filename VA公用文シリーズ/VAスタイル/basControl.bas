@@ -10,7 +10,7 @@ Option Explicit
 '// プロシージャ: ShowStyleOption
 '// 機能:        オプション設定用のユーザーフォームを表示します。
 '//
-'// 概要:        ConfigOptionという名前のユーザーフォームをモーダルで表示します。
+'// 概要:        設定の画面（frmStyleOption）をモーダルで表示します。
 '//==================================================================================================
 Sub ShowStyleOption()
     'フォームを表示する
@@ -23,7 +23,6 @@ End Sub
 '//
 '// 概要:        テキストが選択されている場合はフォントを切り替え、選択されていない場合は
 '//              ConfigStyleプロシージャを呼び出して、見出しレベルを1段階進めます。
-'//              処理中はマウスポインタを待機状態にし、必要に応じてマクロの中断を無効にします。
 '//==================================================================================================
 Sub ChangeForward()
     'テキスト範囲が選択されている場合
@@ -44,7 +43,6 @@ End Sub
 '//
 '// 概要:        テキストが選択されている場合は傍点を切り替え、選択されていない場合は
 '//              ConfigStyleプロシージャを呼び出して、見出しレベルを1段階戻します。
-'//              処理中はマウスポインタを待機状態にし、必要に応じてマクロの中断を無効にします。
 '//==================================================================================================
 Sub ChangeBackward()
 
@@ -67,6 +65,7 @@ End Sub
 '//              もう一方のフォントに設定します。
 '//==================================================================================================
 Private Sub ToggleSelectionFont()
+    On Error GoTo HandleErr
     With Selection
         '最初の文字のフォントが「標準」の場合
         If .Range.Characters.First.Font.Name = strFont Then
@@ -78,6 +77,11 @@ Private Sub ToggleSelectionFont()
             .Font.Name = strFont
         End If
     End With
+    Exit Sub
+
+HandleErr:
+    MsgBox "フォントを切り替えられませんでした。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
 End Sub
 
 '//==================================================================================================
@@ -88,6 +92,7 @@ End Sub
 '//              設定する傍点の種類は変数 strEmphasis に従います。
 '//==================================================================================================
 Private Sub ToggleSelectionEmphasis()
+    On Error GoTo HandleErr
     With Selection
         '最初の文字に傍点がない場合
         If .Range.Characters.First.Font.EmphasisMark = wdEmphasisMarkNone Then
@@ -103,6 +108,11 @@ Private Sub ToggleSelectionEmphasis()
             .Font.EmphasisMark = wdEmphasisMarkNone
         End If
     End With
+    Exit Sub
+
+HandleErr:
+    MsgBox "傍点を切り替えられませんでした。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
 End Sub
 
 '//==================================================================================================
@@ -111,24 +121,27 @@ End Sub
 
 '//==================================================================================================
 '// プロシージャ: RxBtnChangeForward
-'// 機能:        リボン「進む」ボタンのクリック時処理
+'// 機能:        リボン［スタイル変更］ボタンのクリック時処理
+'// 引数:        control - 押されたボタン（参照設定に頼らないよう Object で受けます）
 '//==================================================================================================
-Sub RxBtnChangeForward(control As Object)
+Sub RxBtnChangeForward(ByVal control As Object)
     Call ChangeForward
 End Sub
 
 '//==================================================================================================
 '// プロシージャ: RxBtnChangeBackward
-'// 機能:        リボン「戻る」ボタンのクリック時処理
+'// 機能:        リボン［スタイル復元］ボタンのクリック時処理
+'// 引数:        control - 押されたボタン
 '//==================================================================================================
-Sub RxBtnChangeBackward(control As Object)
+Sub RxBtnChangeBackward(ByVal control As Object)
     Call ChangeBackward
 End Sub
 
 '//==================================================================================================
 '// プロシージャ: RxBtnShowStyleOption
-'// 機能:        リボン「設定」ボタンのクリック時処理
+'// 機能:        リボン［設定］ボタンのクリック時処理
+'// 引数:        control - 押されたボタン
 '//==================================================================================================
-Sub RxBtnShowStyleOption(control As Object)
+Sub RxBtnShowStyleOption(ByVal control As Object)
     Call ShowStyleOption
 End Sub

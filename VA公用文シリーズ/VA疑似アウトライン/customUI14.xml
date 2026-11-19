@@ -1,0 +1,42 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui"
+          xmlns:va="VA_Shared_Namespace">
+  <ribbon>
+    <tabs>
+      <!-- idQを使用することで、複数のアドイン間でタブ(VA)を共有・統合できます -->
+      <tab idQ="va:tabVA" label="VA">
+
+        <group id="grpOutlineTools" label="VA疑似アウトライン">
+
+          <!-- 疑似アウトラインへの変換 / 全角1文字トグル -->
+          <!-- マークダウンへの復元 -->
+          <button id="btnMarkdown"
+                  label="マークダウン変換"
+                  imageMso="TraceBack"
+                  size="large"
+                  onAction="rxbtnMarkdown_click"
+                  supertip="疑似アウトラインを解除し、マークダウン形式に戻します。" />
+
+          <button id="btnFakeOutline"
+                  label="疑似アウトライン変換"
+                  imageMso="TraceForward"
+                  size="large"
+                  onAction="rxbtnFakeOutline_click"
+                  supertip="文書全体を疑似アウトライン形式に変換します。文字列が選択されている場合は全角1文字書式の設定／解除を行います。" />
+
+          <separator id="sepSettings" />
+
+          <!-- オプション設定 -->
+          <!-- 2文字の名前は、大きいボタンでは「設」「定」の2行に割れるので、末尾に改行の文字（&#13;）を入れて1行に収める（2026-11-19 班長指摘） -->
+          <button id="btnOption"
+                  label="設定&#13;"
+                  imageMso="CurrentViewSettings"
+                  size="large"
+                  onAction="rxbtnOption_click"
+                  supertip="変換に関するオプションの設定の画面を開きます。" />
+
+        </group>
+
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

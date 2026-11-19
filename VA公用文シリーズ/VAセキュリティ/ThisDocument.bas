@@ -1,21 +1,16 @@
 'VAセキュリティ
-'https://vba-assets/net/sanitize-document-completely/
-'Copyright c 2020-2025 VBA アセット All Rights Reserved/
+'https://vba-assets.net/sanitize-document-completely/
+'Copyright (c) 2025-2026 VBAアセット
+'MIT License
 
-'2025/7/28
-'初版作成Ver100
+'文書から、個人情報（プロパティ）・コメント・変更履歴・蛍光ペン・文書変数などを削除するアドインです。
 
-'2025/8/14
-'コードを適正化Ver101
-
-'2025/11/29
-'プロジェクト名を変更Ver102
-
-'2026/01/24
-'リボンから起動できるように修正Ver110
-
-'2026/02/07
-'Mac互換性対応（RemoveDocumentInformationの分岐追加）Ver120
-
-'2026/10/17
-'文書変数も削除するように修正Ver130
+'更新履歴
+'2025/07/28  Ver100  初版作成
+'2025/08/14  Ver101  コードを適正化
+'2025/11/29  Ver102  プロジェクト名を変更
+'2026/01/24  Ver110  リボンから起動できるように修正
+'2026/02/07  Ver120  Mac互換性対応（RemoveDocumentInformationの分岐追加）
+'2026/10/17  Ver130  文書変数も削除するように修正
+'2026/11/19  Ver131  エラーが起きたときに番号と内容を表示するよう修正。メッセージの題名とアイコンを揃え、
+'                    定数のモジュール（cstSettings）を追加。冒頭の著作権の表示を改め、MIT License を明記

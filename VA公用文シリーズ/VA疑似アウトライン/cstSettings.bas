@@ -1,9 +1,11 @@
 '================================================================================
 ' モジュール概要:
 ' Word文書の疑似アウトラインとマークダウンの相互変換マクロで使用される、
-' グローバルな定数を定義します。
+' グローバルな定数を定義します。各定数のコメントの末尾に、既定値を記載しています。
 '
 ' 主な内容:
+'   - メッセージの題名
+'
 '   - アウトライン書式プリセット:
 '     番号書式、番号スタイル、インデント設定などを「全半角混在」「すべて半角」
 '     「全角主体」の3つのプリセットとして定義します。
@@ -13,13 +15,17 @@
 '     箇条書きや段落番号の記号、変換処理で使用するマークダウン記号を定義します。
 '
 '   - マクロ動作設定:
-'     設定ファイル名や、変換処理の挙動を制御する各種フラグを定義します。
+'     変換処理の挙動を制御する各種フラグを定義します。
+'     設定の画面で選ぶ項目は、アドイン自身の文書プロパティに保存します（SettingsManager）。
 '
 ' 注意:
 ' このモジュール内の定数を変更すると、マクロ全体の動作に影響します。
 '================================================================================
 
 Option Explicit
+
+'メッセージ
+Public Const strAppTitle As String = "VA疑似アウトライン"   'メッセージのタイトル（デフォルト："VA疑似アウトライン"）
 
 'アウトラインおよびインデント
 '設定項目ごとに見出しレベル1から9までの設定値を「,」で区切って記載してください。
@@ -28,7 +34,7 @@ Option Explicit
     '番号の前後に入れる文字および空白をそのまま追加してください。
     '例：第１："第%1　"、第1："第%1 "、"１："%1　"、(1)："(%1) "
 '番号スタイル
-    '文字種および全・半角の別に応じて、組み込み定数を入力てください。
+    '文字種および全・半角の別に応じて、組み込み定数を入力してください。
     '英字およびローマ数字には全角が使えません。
     '全角アラビア数字：14、半角アラビア数字：0、全角カタカナ：20、半角カタカナ：12
     '英字（小文字）：4、ローマ数字（小文字）：2、丸囲み数字：18
@@ -97,12 +103,8 @@ Public Const strNumList As String = "1."           '段落番号（変更不可�
 Public Const blnMarkdownSpace As Boolean = True    '*マークダウン記号の後の空白（デフォルト：True）
 
 'マクロ
-Public Const blnReplaceSpaceWithIndent = True                           '行頭の空白をインデントに置き換える（デフォルト：True）
-Public Const blnSkipUntil = True                                        '最初の見出しまでの処理を停止する（デフォルト:True）
-Public Const blnStopAfter = True                                        '配置が右揃えの場合に処理を停止する（デフォルト：True）
-Public Const blnApplyTableStyle = True                                  '表内の段落に「行間詰め」スタイルを適用する（デフォルト：True）
-Public Const blnHeadingReset = True                                     'セクション区切りで見出し番号を振り直す（デフォルト：True）
-'変換（疑似アウトライン・マークダウン・全角1文字）を Ctrl+Z 1回で元に戻せるようにする（デフォルト：False）
-'元に戻す（Undo）の記録（Application.UndoRecord）の中で「すべて置換」を行うと、Wordが強制終了することが分かったため
-'（Word 16.0.20430 で確認。VA公用文 Ver8D2 で発生）、Windows版・Mac版とも使わない。安定性を優先し、True にしないこと（Ver371）
-Public Const blnUseUndoRecord As Boolean = False
+Public Const blnReplaceSpaceWithIndent As Boolean = True                '行頭の空白をインデントに置き換える（デフォルト：True）
+Public Const blnSkipUntil As Boolean = True                             '最初の見出しまでの処理を停止する（デフォルト：True）
+Public Const blnStopAfter As Boolean = True                             '配置が右揃えの場合に処理を停止する（デフォルト：True）
+Public Const blnApplyTableStyle As Boolean = True                       '表内の段落に「行間詰め」スタイルを適用する（デフォルト：True）
+Public Const blnHeadingReset As Boolean = True                          'セクション区切りで見出し番号を振り直す（デフォルト：True）

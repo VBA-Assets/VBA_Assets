@@ -1,0 +1,45 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui"
+          xmlns:va="VA_Shared_Namespace">
+  <ribbon>
+    <tabs>
+      <tab idQ="va:tabVA" label="VA">
+        <group id="grpOfficialDocument" label="VA公用文">
+          <!-- マークダウンボタン -->
+          <button id="btnMarkdown"
+                  label="マークダウン"
+                  size="large"
+                  imageMso="OutlinePromoteToHeading"
+                  supertip="マークダウン形式に変換します。"
+                  onAction="rxChangeToMarkdown"/>
+
+          <!-- ニュートラルボタン -->
+          <button id="btnNeutral"
+                  label="ニュートラル"
+                  size="large"
+                  imageMso="NotebookColor13"
+                  supertip="インデントなしのアウトライン形式に変換します。文字列が選択されている場合は「行間詰め」スタイルを適用します。"
+                  onAction="rxChangeToNeutral"/>
+
+          <!-- アウトラインボタン -->
+          <button id="btnOutline"
+                  label="アウトライン"
+                  size="large"
+                  imageMso="OutlineDemoteToBodyText"
+                  supertip="インデントが設定されたアウトライン形式に変換します。"
+                  onAction="rxChangeToOutline"/>
+
+          <separator id="sep1"/>
+
+          <!-- 設定ボタン（標準 03「リボン」：名前は「設定」、アイコンは CurrentViewSettings） -->
+          <!-- 2文字の名前は、大きいボタンでは「設」「定」の2行に割れるので、末尾に改行の文字（&#13;）を入れて1行に収める（2026-11-19 班長指摘） -->
+          <button id="btnSetup"
+                  label="設定&#13;"
+                  size="large"
+                  imageMso="CurrentViewSettings"
+                  supertip="文書の種類やページ設定などの設定の画面を表示します。"
+                  onAction="rxShowSetupMenu"/>
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

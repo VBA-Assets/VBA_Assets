@@ -21,7 +21,7 @@ Private Sub ShowImportExportMenu()
     ' フォームが見つからない場合のエラーチェックを行います
     If Err.Number <> 0 Then
         ' エラーメッセージを表示します
-        MsgBox "フォーム 'frmStartMenu' が見つかりません。", vbCritical
+        MsgBox "フォーム 'frmStartMenu' が見つかりません。", vbExclamation, strAppTitle
     End If
     ' エラー処理を通常の動作に戻します
     On Error GoTo 0

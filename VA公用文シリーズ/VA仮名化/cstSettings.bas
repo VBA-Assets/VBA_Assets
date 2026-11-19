@@ -33,9 +33,3 @@ Option Explicit
     '辞書（登録した語と記号の対応）と、仮名化中かどうかを、文書の文書変数に保存します。
     Public Const strVarPrefix As String = "VAKamei_"                     '文書変数の名前の接頭辞（デフォルト："VAKamei_"）
 
-    '処理全体を Ctrl+Z 1回で元に戻せるようにする（UndoRecord を使う）（デフォルト：False）
-    'UndoRecord の記録中に「すべて置換」を行うと、文書によっては Word が強制終了するため、使いません
-    '（2026-10-17、Word 16.0.20430 で確認。文字単位の右インデントのある段落などを含む文書で、
-    '  記録なしなら落ちず、新しい文書で同じ置換をしても落ちなかった）。
-    'False の場合、Ctrl+Z で戻すときは、置き換えた語ごとに1回ずつになります。
-    Public Const blnUseUndoRecord As Boolean = False

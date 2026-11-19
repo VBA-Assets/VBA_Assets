@@ -5,7 +5,7 @@ Option Explicit
 ' 引数 : TargetProj - エクスポート対象のVBProjectオブジェクト
 '         FolderPath - 出力先フォルダパス
 '--------------------------------------------------------------------------------
-Public Sub ExportModulesToFiles(ByVal TargetProj As Object, ByVal FolderPath As String)
+Public Sub ExportModulesToFiles(ByVal TargetProj As Object, ByVal folderPath As String)
     Dim vbProj As Object
     Dim vbComp As Object
     Dim codeContent As String
@@ -19,19 +19,19 @@ Public Sub ExportModulesToFiles(ByVal TargetProj As Object, ByVal FolderPath As 
     On Error GoTo ErrorHandler
 
     If TargetProj Is Nothing Then
-        MsgBox "対象プロジェクトが指定されていません。", vbExclamation
+        MsgBox "対象プロジェクトが指定されていません。", vbExclamation, strAppTitle
         Exit Sub
     End If
     Set vbProj = TargetProj
 
     ' フォルダ末尾にセパレータを付加
-    If Right(FolderPath, 1) <> Application.PathSeparator Then
-        FolderPath = FolderPath & Application.PathSeparator
+    If Right(folderPath, 1) <> Application.PathSeparator Then
+        folderPath = folderPath & Application.PathSeparator
     End If
 
     ' フォルダが存在しない場合は作成
-    If Not basUtility.FolderExists(FolderPath) Then
-        MkDir FolderPath
+    If Not basUtility.FolderExists(folderPath) Then
+        MkDir folderPath
     End If
 
     exportCount = 0
@@ -56,7 +56,7 @@ Public Sub ExportModulesToFiles(ByVal TargetProj As Object, ByVal FolderPath As 
         End Select
 
         ' ファイルに書き込み
-        filePath = FolderPath & vbComp.Name & fileExt
+        filePath = folderPath & vbComp.Name & fileExt
         basUtility.WriteTextFileUTF8 filePath, codeContent
 
         ' manifest エントリ追加
@@ -79,12 +79,12 @@ Public Sub ExportModulesToFiles(ByVal TargetProj As Object, ByVal FolderPath As 
                   manifestModules & vbCrLf & _
                   "  ]" & vbCrLf & _
                   "}"
-    basUtility.WriteTextFileUTF8 FolderPath & "manifest.json", manifestStr
+    basUtility.WriteTextFileUTF8 folderPath & "manifest.json", manifestStr
 
     MsgBox exportCount & " 個のモジュールをエクスポートしました。" & vbCrLf & _
-           "フォルダ: " & FolderPath, vbInformation, "エクスポート完了"
+           "フォルダ: " & folderPath, vbInformation, strAppTitle
     Exit Sub
 
 ErrorHandler:
-    MsgBox "エクスポート中にエラーが発生しました。" & vbCrLf & Err.Description, vbCritical
+    MsgBox "エクスポート中にエラーが発生しました。" & vbCrLf & Err.Description, vbExclamation, strAppTitle
 End Sub

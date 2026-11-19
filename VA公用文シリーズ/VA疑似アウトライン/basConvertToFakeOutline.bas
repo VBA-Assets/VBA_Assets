@@ -17,39 +17,21 @@ Sub ConvertToFakeOutline()
     ' 変数管理クラス（VariablesManager）の新しいインスタンスを生成する
     Set Variables = New VariablesManager
 
-    ' 確認メッセージに表示する、元に戻せるかどうかの案内を設定する
-    Dim strUndoMessage As String
-    If blnUseUndoRecord Then
-        ' 元に戻す（Undo）の記録を行う場合
-        strUndoMessage = "Ctrl+Zで元に戻せます。"
-    Else
-        ' 元に戻す（Undo）の記録を行わない場合（Mac版の既定）
-        strUndoMessage = "元に戻せない可能性があります。"
-    End If
-
     ' ユーザーに処理開始の確認を行う（キャンセル時は処理終了）
+    ' 変換は Ctrl+Z 1回では戻せないため、実行の前に確かめる（元に戻す記録 UndoRecord は、Word が落ちるため使わない）
     If MsgBox("疑似アウトラインへの変換を開始します。" & vbCr & _
-        strUndoMessage & vbCr & vbCr & _
-        "よろしいですか？", vbOKCancel, "VA書式修正") = vbCancel Then Exit Sub
+        "元に戻せない可能性があります。" & vbCr & vbCr & _
+        "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then Exit Sub
+
+    ' 画面描画の設定を退避する（終了処理で、この値に戻す）
+    Dim blnScreenUpdating As Boolean
+    blnScreenUpdating = Application.ScreenUpdating
 
     ' ステータスバーに準備中のメッセージを表示する
     Application.StatusBar = "疑似アウトラインへの変換を準備しています。"
 
     ' エラー発生時にエラー処理ラベルへジャンプするよう設定
     On Error GoTo HandleErr
-
-    ' 元に戻す（Undo）の記録を開始し、変換全体を Ctrl+Z 1回で戻せるようにする
-    Dim blnUndoRecordStarted As Boolean
-    If blnUseUndoRecord Then
-        ' Mac版で未対応の場合に備え、エラーは無視して処理を続行する
-        On Error Resume Next
-        Application.UndoRecord.StartCustomRecord "VA疑似アウトライン：疑似アウトライン"
-        ' 記録を開始できたかどうかを記憶する（終了処理で記録を閉じるため）
-        blnUndoRecordStarted = (Err.Number = 0)
-        Err.Clear
-        ' エラー処理ラベルへジャンプする設定に戻す
-        On Error GoTo HandleErr
-    End If
 
     ' 処理速度向上のため、画面描画を停止する
     Application.ScreenUpdating = False
@@ -110,12 +92,10 @@ Cleanup:
     ' 終了処理ラベル
     ' 終了処理の途中でエラーが起きても、残りの終了処理を必ず行う
     On Error Resume Next
-    ' 元に戻す（Undo）の記録を開始した場合のみ、記録を終了する
-    If blnUndoRecordStarted Then Application.UndoRecord.EndCustomRecord
     ' スマート カット アンド ペーストの設定を、処理開始前の状態に戻す（正常終了・エラー終了の両方で必ず行う）
     If blnSmartCutPasteSaved Then Options.SmartCutPaste = blnSmartCutPaste
-    ' 画面描画を再開する
-    Application.ScreenUpdating = True
+    ' 画面描画を、処理開始前の状態に戻す
+    Application.ScreenUpdating = blnScreenUpdating
     ' ステータスバーをクリアする
     Application.StatusBar = ""
     ' マウスカーソルを通常に戻す
@@ -128,7 +108,8 @@ Cleanup:
 HandleErr:
     ' エラー処理ラベル
     ' エラーメッセージを表示する
-    MsgBox "エラーが発生したため、処理を停止しました。", vbOKOnly + vbExclamation, "VA見出し変換"
+    MsgBox "エラーが発生したため、処理を停止しました。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbOKOnly + vbExclamation, strAppTitle
     ' クリーンアップ処理へ移動して終了する
     Resume Cleanup
 End Sub
@@ -142,7 +123,7 @@ End Sub
 '       Wordの「マクロ」ダイアログボックスにこのマクロが表示されるのを
 '       防ぐためのダミー引数です。
 '================================================================================
-Sub ToggleFakeOneChar(Optional blnDummy As Boolean)
+Sub ToggleFakeOneChar(Optional ByVal blnDummy As Boolean = False)
     ' 変数管理クラスのインスタンス生成（設定値参照のため）
     Set Variables = New VariablesManager
     
@@ -152,20 +133,9 @@ Sub ToggleFakeOneChar(Optional blnDummy As Boolean)
     ' エラー処理
     On Error GoTo HandleErr
 
-    ' 元に戻す（Undo）の記録を開始し、書式の設定・解除を Ctrl+Z 1回で戻せるようにする
-    Dim blnUndoRecordStarted As Boolean
-    If blnUseUndoRecord Then
-        ' Mac版で未対応の場合に備え、エラーは無視して処理を続行する
-        On Error Resume Next
-        Application.UndoRecord.StartCustomRecord "VA疑似アウトライン：全角1文字"
-        ' 記録を開始できたかどうかを記憶する（終了処理で記録を閉じるため）
-        blnUndoRecordStarted = (Err.Number = 0)
-        Err.Clear
-        ' エラー処理に戻す
-        On Error GoTo HandleErr
-    End If
-
-    ' 画面描画停止
+    ' 画面描画の設定を退避してから、画面描画を停止する（終了処理で、退避した値に戻す）
+    Dim blnScreenUpdating As Boolean
+    blnScreenUpdating = Application.ScreenUpdating
     Application.ScreenUpdating = False
 
     ' 選択範囲（Range）を取得
@@ -287,15 +257,14 @@ Sub ToggleFakeOneChar(Optional blnDummy As Boolean)
 Cleanup:
     ' 終了処理の途中でエラーが起きても、残りの終了処理を必ず行う
     On Error Resume Next
-    ' 元に戻す（Undo）の記録を開始した場合のみ、記録を終了する
-    If blnUndoRecordStarted Then Application.UndoRecord.EndCustomRecord
-    Application.ScreenUpdating = True
+    Application.ScreenUpdating = blnScreenUpdating
     Set Variables = Nothing
     Set rng = Nothing
     Exit Sub
     
 HandleErr:
-    MsgBox "エラーが発生しました: " & Err.Description, vbExclamation
+    MsgBox "全角1文字の書式を設定・解除できませんでした。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
     Resume Cleanup
 End Sub
 
@@ -666,7 +635,7 @@ Private Sub ProcessCompositeHeadings(varRtnOnlyPar As Variant, sngAdvWidth As Si
         
     ' 左インデントの増加量が1（標準的なグリッド合わせ）でない場合は処理不可として終了
     If lngLeftIndentsAdd <> 1 Then
-        MsgBox "左インデント増加量が1でないため、複合見出しは処理できません。"
+        MsgBox "左インデント増加量が1でないため、複合見出しは処理できません。", vbExclamation, strAppTitle
         Exit Sub
     End If
     

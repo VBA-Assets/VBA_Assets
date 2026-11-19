@@ -1,0 +1,23 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui"
+          xmlns:va="VA_Shared_Namespace">
+  <ribbon>
+    <tabs>
+      <!-- 共有タブ "VA" を定義 (idQを使用) -->
+      <tab idQ="va:tabVA" label="VA">
+
+        <!-- VAクリップのグループ（group id・button id は、ほかのツールと重ならない名前にする） -->
+        <group id="grpVAClip" label="VAクリップ">
+
+          <!-- メインメニュー（フォーム）表示ボタン -->
+          <button id="btnVAClipShowMenu"
+                  label="VBAエクスポート／インポート"
+                  imageMso="WindowsCascade"
+                  size="large"
+                  onAction="VAClip_OnRibbonButton_Click"
+                  supertip="VBA のモジュールを、クリップボードとの間で書き出し（エクスポート）・取り込み（インポート）する画面を表示します。" />
+
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>

@@ -32,7 +32,7 @@ End Sub
 '================================================================================
 ' 機能: 「OK」ボタンがクリックされた際の処理を実行します。
 '       フォームで選択された設定内容をグローバル変数に格納すると共に、
-'       設定ファイルに保存します。その後、フォームを閉じます。
+'       アドイン自身の文書プロパティに保存します。その後、フォームを閉じます。
 ' 引数: なし
 '================================================================================
 Private Sub CommandButton1_Click()
@@ -42,14 +42,14 @@ Private Sub CommandButton1_Click()
     Set Variables = New VariablesManager
     
     '「行間詰めスタイルも変換する」を設定する
-    If CheckBox1.value = True Then
+    If CheckBox1.Value = True Then
         Variables.strNoParagraphSpace = "Enable"
     Else
         Variables.strNoParagraphSpace = "Disable"
     End If
     
     '「見出し番号を全角1文字に調節する」を設定する
-    If CheckBox11.value = True Then
+    If CheckBox11.Value = True Then
         Variables.strOneFullWidth = "Enable"
     Else
         Variables.strOneFullWidth = "Disable"

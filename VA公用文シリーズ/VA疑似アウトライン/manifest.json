@@ -3,7 +3,7 @@
   "modules": [
     {"name": "ThisDocument", "type": "Document", "file": "ThisDocument.bas"},
     {"name": "frmConversionOption", "type": "Form", "file": "frmConversionOption.frm"},
-    {"name": "Settings", "type": "Standard", "file": "Settings.bas"},
+    {"name": "cstSettings", "type": "Standard", "file": "cstSettings.bas"},
     {"name": "VariablesManager", "type": "Class", "file": "VariablesManager.cls"},
     {"name": "SettingsManager", "type": "Class", "file": "SettingsManager.cls"},
     {"name": "basConvertToFakeOutline", "type": "Standard", "file": "basConvertToFakeOutline.bas"},

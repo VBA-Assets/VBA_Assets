@@ -96,7 +96,7 @@ End Sub
 ' 選択されたプロジェクトを取得
 Private Function GetSelectedProject() As Object
     If cboProjectList.ListIndex = -1 Then
-        MsgBox "プロジェクトを選択してください。", vbExclamation
+        MsgBox "プロジェクトを選択してください。", vbExclamation, strAppTitle
         Set GetSelectedProject = Nothing
         Exit Function
     End If
@@ -119,7 +119,7 @@ Private Sub CommandButton1_Click()
               "このプロジェクトから全モジュールをクリップボードにエクスポートします。" & vbCrLf & _
               "よろしいですか？"
               
-        If MsgBox(msg, vbOKCancel + vbQuestion, "エクスポート確認") <> vbOK Then
+        If MsgBox(msg, vbOKCancel + vbQuestion, strAppTitle) <> vbOK Then
             Exit Sub
         End If
         ' --------------------
@@ -153,14 +153,14 @@ Private Sub CommandButton2_Click()
     
     ' 空チェック
     If Len(clipText) = 0 Then
-        MsgBox "クリップボードが空です。", vbExclamation
+        MsgBox "クリップボードが空です。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
     ' JSONっぽくない([ で始まっていない)場合は警告して中止
     If Left(Trim(clipText), 1) <> "[" Then
         MsgBox "クリップボードの内容が有効なJSON形式ではないようです。" & vbCrLf & _
-               "処理を中止します。", vbExclamation, "形式エラー"
+               "処理を中止します。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -171,12 +171,12 @@ Private Sub CommandButton2_Click()
     On Error GoTo 0
 
     If jsonColl Is Nothing Then
-        MsgBox "JSONの解析に失敗しました。", vbCritical
+        MsgBox "JSONの解析に失敗しました。", vbExclamation, strAppTitle
         Exit Sub
     End If
     
     If jsonColl.count = 0 Then
-        MsgBox "JSON内にモジュール定義が見つかりません。", vbExclamation
+        MsgBox "JSON内にモジュール定義が見つかりません。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -215,7 +215,7 @@ Private Sub CommandButton2_Click()
           "※警告: 既存の同名モジュールは上書きされます。" & vbCrLf & _
           "実行してよろしいですか？"
 
-    If MsgBox(msg, vbOKCancel + vbExclamation + vbDefaultButton2, "インポート実行の最終確認") <> vbOK Then
+    If MsgBox(msg, vbOKCancel + vbQuestion + vbDefaultButton2, strAppTitle) <> vbOK Then
         Exit Sub
     End If
 

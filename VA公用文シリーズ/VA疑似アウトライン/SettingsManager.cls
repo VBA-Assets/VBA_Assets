@@ -1,8 +1,8 @@
+Option Explicit
 '================================================================================
 ' クラスモジュール: SettingsManager
-' 機能: 設定ファイルの読み書きを管理する
+' 機能: 設定の読み書きを管理する（設定は、アドイン自身の文書プロパティに保存する）
 '================================================================================
-Option Explicit
 
 ' このアドインが管理するプロパティであることを示すためのプレフィックス
 Private Const c_Prefix As String = "VA_"
@@ -25,22 +25,22 @@ Public Sub SaveSettingsToProperty(ByRef varKeys() As Variant, ByRef varValues() 
     Dim prefixedKeyName As String
     Dim propType As Long
     Dim prop As DocumentProperty
-    
+
+    On Error GoTo HandleErr
+
     ' プロシージャを実行しているアドインファイル自身を参照
     Set doc = ThisDocument
-    
+
     ' 配列の要素数が一致しない場合はエラー (LBoundもチェック)
     If LBound(varKeys) <> LBound(varValues) Or UBound(varKeys) <> UBound(varValues) Then
-        MsgBox "キーと値の配列のインデックス範囲が一致しません。", vbCritical
-        GoTo CleanExit
+        MsgBox "設定を保存できませんでした（キーと値の配列のインデックス範囲が一致しません）。", vbExclamation, strAppTitle
+        GoTo Cleanup
     End If
-    
-    On Error GoTo SaveError
-    
+
     For i = LBound(varKeys) To UBound(varKeys)
         keyName = varKeys(i)
         prefixedKeyName = c_Prefix & keyName ' プレフィックスを付加
-        
+
         ' 値の型に応じてプロパティの型を決定
         Select Case VarType(varValues(i))
             Case vbInteger, vbLong
@@ -54,49 +54,41 @@ Public Sub SaveSettingsToProperty(ByRef varKeys() As Variant, ByRef varValues() 
             Case Else ' vbString, vbEmpty, vbNull, etc.
                 propType = msoPropertyTypeString
         End Select
-        
-        ' 既存のプロパティを検索
+
+        ' 既存のプロパティを検索（ないときはエラーになるので、この1行だけエラーを無視する）
+        Set prop = Nothing
         On Error Resume Next
         Set prop = doc.CustomDocumentProperties(prefixedKeyName)
-        
-        If Err.Number <> 0 Then
-            ' プロパティが存在しない場合：新規作成
-            Err.Clear
-        Else
-            ' プロパティが存在する場合：更新
-            ' 型の不一致エラーを避けるため、一度削除する
-            prop.Delete
-        End If
-        
-        ' エラーハンドリングを明示的にリセット
-        On Error GoTo 0
-        
+        Err.Clear
+        On Error GoTo HandleErr
+
+        ' プロパティが存在する場合：型の不一致エラーを避けるため、一度削除する
+        If Not prop Is Nothing Then prop.Delete
+
         ' プロパティを（再）追加
         doc.CustomDocumentProperties.Add _
             Name:=prefixedKeyName, _
             LinkToContent:=False, _
             Type:=propType, _
-            value:=varValues(i)
-            
-        On Error GoTo SaveError ' エラー処理を元に戻す
+            Value:=varValues(i)
     Next i
-    
+
     ' Wordにファイルに変更があったことを明示的に通知する
     doc.Saved = False
-    
+
     ' 変更を保存するために、アドインファイルを明示的に保存する
     doc.Save
-    
-    GoTo CleanExit
 
-SaveError:
-    MsgBox "設定値の保存に失敗しました。" & vbCrLf & _
-           "エラー内容: " & Err.Description, vbCritical
-           
-CleanExit:
+Cleanup:
     ' オブジェクトを解放
     Set doc = Nothing
     Set prop = Nothing
+    Exit Sub
+
+HandleErr:
+    MsgBox "設定値の保存に失敗しました。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
 
 '==============================================================================
@@ -116,63 +108,60 @@ Public Sub LoadSettingsFromProperty(ByRef varKeys() As Variant, ByRef varValues(
     Dim count As Long
     Dim i As Long
     Dim prefixLen As Long
-    
-    ' プロシージャを実行しているアドインファイル自身を参照
-    Set doc = ThisDocument
-    
-    ' 配列を初期化
+
+    ' 配列を初期化（読み込めなかったときは、この空の配列のまま返す）
     ReDim varKeys(0)
     ReDim varValues(0)
-    
+
+    On Error GoTo HandleErr
+
+    ' プロシージャを実行しているアドインファイル自身を参照
+    Set doc = ThisDocument
+
     count = 0
     prefixLen = Len(c_Prefix)
-    
-    On Error GoTo LoadError
-    
+
     ' プレフィックスに一致するプロパティの数を先に数える
     For Each prop In doc.CustomDocumentProperties
         If Left(prop.Name, prefixLen) = c_Prefix Then
             count = count + 1
         End If
     Next prop
-    
+
     ' データがない場合は空の配列のまま返す
-    If count = 0 Then
-        ReDim varKeys(0)
-        ReDim varValues(0)
-        GoTo CleanExit
-    End If
-    
+    If count = 0 Then GoTo Cleanup
+
     ' 配列のサイズを一度だけ確保 (1ベース配列)
     ReDim tempKeys(1 To count)
     ReDim tempValues(1 To count)
-    
+
     i = 1
     ' 再度ループして、該当するキーと値を配列に格納
     For Each prop In doc.CustomDocumentProperties
         If Left(prop.Name, prefixLen) = c_Prefix Then
             ' プレフィックスを除去したキー名
             tempKeys(i) = Mid(prop.Name, prefixLen + 1)
-            tempValues(i) = prop.value
+            tempValues(i) = prop.Value
             i = i + 1
             If i > count Then Exit For ' 念のため (count分取得したら抜ける)
         End If
     Next prop
-    
+
     ' 結果を引数に代入
     varKeys = tempKeys
     varValues = tempValues
-    
-    GoTo CleanExit
-    
-LoadError:
-    MsgBox "設定値の読み込みに失敗しました。" & vbCrLf & _
-           "エラー内容: " & Err.Description, vbCritical
 
-CleanExit:
+Cleanup:
     ' オブジェクトを解放
     Set doc = Nothing
     Set prop = Nothing
     Erase tempKeys
     Erase tempValues
+    Exit Sub
+
+HandleErr:
+    MsgBox "設定値の読み込みに失敗しました。既定の設定で続けます。" & vbCrLf & _
+           "番号：" & Err.Number & vbCrLf & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
+
