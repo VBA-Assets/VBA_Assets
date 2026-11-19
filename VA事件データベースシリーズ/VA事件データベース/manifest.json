@@ -8,8 +8,8 @@
     {"name": "sht12", "type": "Document", "file": "sht12.bas"},
     {"name": "shtFldr", "type": "Document", "file": "shtFldr.bas"},
     {"name": "Setup", "type": "Standard", "file": "Setup.bas"},
-    {"name": "Fldr_backup", "type": "Class", "file": "Fldr_backup.cls"},
     {"name": "Evnt", "type": "Class", "file": "Evnt.cls"},
-    {"name": "Fldr", "type": "Class", "file": "Fldr.cls"}
+    {"name": "Fldr", "type": "Class", "file": "Fldr.cls"},
+    {"name": "cstSettings", "type": "Standard", "file": "cstSettings.bas"}
   ]
 }

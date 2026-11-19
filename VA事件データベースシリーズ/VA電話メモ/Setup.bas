@@ -9,29 +9,34 @@ Public Evnt As New Evnt         'イベント制御用クラスの宣言
 ' 戻り値 : なし
 '--------------------------------------------------
 Public Sub VABridge_AfterLoad(Optional ByVal dummy As Byte = 0)
+    '--- 前処理 ---
     'エラーが発生した場合、エラー処理ルーチンへジャンプします
-    On Error GoTo ErrHandler
+    On Error GoTo HandleErr
 
     'イベントの発生や画面更新を停止し、処理速度を向上させます
     Evnt.Disable
-    
+
+    '--- メイン処理 ---
     '電話メモのテーブルを番号順に並び替え、書式（色や表示形式）を設定します
     'FormatTableにダミー引数がついたが、Optionalなのでそのまま呼び出し可能
     sht11.FormatTable
    
     '日次バックアップ処理を実行します（データがある場合のみ実行されます）
     PerformDailyBackup
-    
-    '停止していたイベントや画面更新を再開させます
+
+Cleanup:
+    '--- 後処理 ---
+    '停止していたイベントや画面更新を、停止する前の値に戻します（エラーのときも通ります）
+    On Error Resume Next
     Evnt.Enable
-    '処理を正常に終了します
     Exit Sub
 
-ErrHandler:
-    'エラーが発生した場合、メッセージボックスを表示します
-    MsgBox "初期化処理中にエラーが発生しました。", vbCritical, "電話メモ"
-    'エラー時でも操作不能にならないよう、イベントや画面更新を再開させます
-    Evnt.Enable
+HandleErr:
+    'エラーの番号と内容を表示して、後処理へ進みます
+    MsgBox "データを読み込んだ後の処理でエラーが発生しました。" & vbCrLf & _
+           "エラー番号：" & Err.Number & vbCrLf & _
+           "内容：" & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
 
 '--------------------------------------------------------------------------------
@@ -98,7 +103,7 @@ HandleErr:
     MsgBox "自動バックアップの作成中にエラーが発生しました。" & vbCrLf & _
            "保存先：" & strBackupFolder & vbCrLf & _
            "エラー番号：" & Err.Number & vbCrLf & _
-           "内容：" & Err.Description, vbExclamation, "VA電話メモ"
+           "内容：" & Err.Description, vbExclamation, strAppTitle
     Resume Cleanup
 End Sub
 

@@ -44,6 +44,9 @@
 '                    「.」が2つ以上あるファイル名の拡張子が正しく取得できないバグを修正
 '                    使用していないプロシージャを削除
 '2026/11/19  Ver404  インストールの後の名前（版のない名前）のブックで、日次の自動バックアップが作られず、開くたびにエラーのメッセージが出るバグを修正
+'2026/11/19  Ver405  メッセージの題名を「VA領収書等ファイル保管」にし（それまでは「ファイル保管」）、アイコンを完了・確認・エラーで使い分けるように変更
+'                    処理の後、画面の更新・イベント・自動計算を、処理の前の値に戻すように変更（手動計算の設定が自動に変わっていた）
+'                    ブックを開くときのエラーのメッセージに、エラーの番号を表示するように変更
 
 ' 変数の宣言を強制する
 Option Explicit
@@ -56,12 +59,14 @@ Option Explicit
 ' ワークブックを開いた時のイベントプロシージャ
 Private Sub Workbook_Open()
     
-    ' エラーが発生した場合はErrHandlerラベルへジャンプする
-    On Error GoTo ErrHandler
+    '--- 前処理 ---
+    ' エラーが発生した場合はHandleErrラベルへジャンプする
+    On Error GoTo HandleErr
     
     ' イベント処理および画面更新を一時的に無効化する
     Evnt.Disable
        
+    '--- メイン処理 ---
     ' 保管シートをアクティブにする
     ShtHokan.Activate
 
@@ -91,18 +96,19 @@ Private Sub Workbook_Open()
     ' 日次バックアップ処理を呼び出す
     basSetup.PerformDailyBackup
 
-    ' イベント処理および画面更新を有効化して元に戻す
+Cleanup:
+    '--- 後処理 ---
+    ' イベント処理および画面更新を、停止する前の値に戻す（エラーのときも通る）
+    On Error Resume Next
     Evnt.Enable
-    ' エラーがなければプロシージャを終了する
     Exit Sub
 
-' エラー処理用のラベル
-ErrHandler:
-    ' エラー内容をメッセージボックスで表示する
-    MsgBox "起動プロセスの中でエラーが発生しました。" & vbCrLf & Err.Description, vbCritical, "ファイル保管"
-    ' イベント処理および画面更新を有効化して元に戻す
-    Evnt.Enable
-' プロシージャを終了する
+HandleErr:
+    ' エラーの番号と内容を表示して、後処理へ進む
+    MsgBox "ブックを開くときの処理でエラーが発生しました。" & vbCrLf & _
+           "エラー番号：" & Err.Number & vbCrLf & _
+           "内容：" & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
 
 '--------------------------------------------------

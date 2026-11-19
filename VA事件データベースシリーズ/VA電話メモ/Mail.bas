@@ -20,7 +20,7 @@ Sub SendMail(r)
         If MsgBox("既に送信しています（" & _
                 Format(Range("電話メモ[メール送信日時]")(r).Value, "yyyy/m/d h:mm") & "）。" & vbCrLf & _
                 vbCrLf & _
-                "もう一度送信しますか？", vbYesNo + vbQuestion) = vbNo Then
+                "もう一度送信しますか？", vbYesNo + vbQuestion, strAppTitle) = vbNo Then
             Exit Sub
         End If
     End If
@@ -58,7 +58,7 @@ Sub SendMail(r)
     'メールアドレスがなかった場合は終了する
     'テーブルにメールアドレスが入力されていない場合は、メッセージを表示して終了します。
     If strMailAddress = "" Then
-        MsgBox "メールアドレスが設定されていません｡ "
+        MsgBox "メールアドレスが設定されていません。", vbExclamation, strAppTitle
         Exit Sub
     End If
        
@@ -67,8 +67,8 @@ Sub SendMail(r)
             vbCrLf & _
             strMailTo & "(" & strMailAddress & ")" & vbCrLf & _
             vbCrLf & _
-            "よろしいですか？", vbOKCancel) = vbCancel Then
-        MsgBox "メールの送信を中止しました｡ "
+            "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then
+        MsgBox "メールの送信を中止しました。", vbInformation, strAppTitle
         Exit Sub
     End If
         
@@ -105,7 +105,7 @@ Sub SendMail(r)
 
     'メール送信完了時の処理を行う
     Range("電話メモ[メール送信日時]")(r).Value = Now                    '送信日時を記録
-    MsgBox strMailTo & "へのメール送信が完了しました。"
+    MsgBox strMailTo & "へのメール送信が完了しました。", vbInformation, strAppTitle
 
     'エラー処理を解除する
     On Error GoTo 0
@@ -113,6 +113,6 @@ Sub SendMail(r)
 
 HdlErr:
     'エラーメッセージを表示する
-    MsgBox "メールが送信できませんでした。", vbExclamation
+    MsgBox "メールが送信できませんでした。", vbExclamation, strAppTitle
 End Sub
 

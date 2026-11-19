@@ -20,7 +20,7 @@ Private Sub Worksheet_Activate()
     
     '事件番号が選択されていなければ中止
     If lngActCase = 0 Then
-        MsgBox "事件番号が選択されていないため、事件メモは作成できません。", vbInformation, "事件データベース"
+        MsgBox "事件番号が選択されていないため、事件メモは作成できません。", vbExclamation, strAppTitle
         GoTo Cleanup
     End If
 
@@ -32,7 +32,7 @@ Private Sub Worksheet_Activate()
     If r = 0 Then GoTo Cleanup
 
     '作成確認
-    If MsgBox(sht11.Range("事件[事件呼名]")(r) & "の事件メモを作成しますか？", vbYesNo, "事件データベース") = vbNo Then
+    If MsgBox(sht11.Range("事件[事件呼名]")(r) & "の事件メモを作成しますか？", vbYesNo + vbQuestion, strAppTitle) = vbNo Then
         GoTo Cleanup
     End If
     
@@ -63,7 +63,7 @@ Private Sub SheetSave()
 
     '保存確認
     If MsgBox("事件メモを別ファイルに保存しますか？" & vbNewLine & _
-              "作成されたファイルは、当該事件のデータフォルダに保存されます。", vbYesNo, "事件データベース") = vbNo Then
+              "作成されたファイルは、当該事件のデータフォルダに保存されます。", vbYesNo + vbQuestion, strAppTitle) = vbNo Then
         Exit Sub
     End If
     
@@ -91,12 +91,12 @@ Private Sub SheetSave()
     
     '元のシートに戻る
     Me.Activate
-    MsgBox "保存が完了しました。", vbInformation, "事件データベース"
+    MsgBox "保存が完了しました。", vbInformation, strAppTitle
     Exit Sub
 
 ErrHandler:
     If Not wbNew Is Nothing Then wbNew.Close SaveChanges:=False
     Me.Activate
-    MsgBox "ファイルの保存に失敗しました。" & vbCr & "パスを確認してください: " & savePath, vbExclamation, "事件データベース"
+    MsgBox "ファイルの保存に失敗しました。" & vbCr & "パスを確認してください: " & savePath, vbExclamation, strAppTitle
 End Sub
 

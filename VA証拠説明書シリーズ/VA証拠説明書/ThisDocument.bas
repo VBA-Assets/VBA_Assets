@@ -1,13 +1,18 @@
+'VA証拠説明書
+'https://vba-assets.net/description-of-evidence/
+'Copyright (c) 2026 VBAアセット
+'MIT License
+
 Option Explicit
 
-' =========================================================
-' 変更履歴
-' 2026/03/18    Ver100    新規作成
-' 2026/03/19    Ver101    行の途中で改ページしないように設定
-' 2026/03/21    Ver110    標目の結合・分割を実行前に選択するように修正
-' 2026/05/16    Ver120    結合・分割を「作成年月日」および「作成者」をダブルクリックしても可能に変更
-'                         作成年月日の書式設定の起動は停止
-' =========================================================
+'更新履歴
+'2026/03/18  Ver100  新規作成
+'2026/03/19  Ver101  行の途中で改ページしないように設定
+'2026/03/21  Ver110  標目の結合・分割を実行前に選択するように修正
+'2026/05/16  Ver120  結合・分割を「作成年月日」および「作成者」をダブルクリックしても可能に変更
+'                    作成年月日の書式設定の起動は停止
+'2026/11/19  Ver121  メッセージの題名を「VA証拠説明書」にし、エラーのメッセージにエラーの番号を表示するように変更
+'                    定数のモジュール（cstSettings）を足し、VBA プロジェクトの名前を VA_EvidenceExplanation に変更
 
 ' 処理中かどうかを判定するためのモジュールレベル変数（多重実行防止用）
 Private isProcessing As Boolean
@@ -29,24 +34,24 @@ Sub TogglePartyCircle()
     If isProcessing Then Exit Sub
     isProcessing = True
     System.Cursor = wdCursorWait
-    On Error GoTo ErrorHandler
+    On Error GoTo HandleErr
 
     Dim doc As Document
     Dim shp As Shape
     Dim moveDistance As Single
     
-    ' 【設定】移動距離を指定します（単位：ポイント）
-    moveDistance = 50
+    ' 移動距離（単位：ポイント）は、定数のモジュール cstSettings の sngMarkerMove で変える
+    moveDistance = sngMarkerMove
     Set doc = ActiveDocument
     
     ' 1. 名前で図形を取得（エラーを一時的に無視して安全に取得）
     On Error Resume Next
     Set shp = doc.Shapes("MarkerCircle")
-    On Error GoTo ErrorHandler ' エラーハンドリングを通常に戻す
+    On Error GoTo HandleErr ' エラーハンドリングを通常に戻す
     
     If shp Is Nothing Then
-        MsgBox "対象の図形（MarkerCircle）が見つかりません。", vbExclamation
-        GoTo ExitHandler
+        MsgBox "対象の図形（MarkerCircle）が見つかりません。", vbExclamation, strAppTitle
+        GoTo Cleanup
     End If
 
     ' 2. 移動処理（図形の代替テキストに現在の状態を記録して判定）
@@ -60,16 +65,19 @@ Sub TogglePartyCircle()
         shp.AlternativeText = "Genkoku" ' 状態を保存
     End If
 
-' === 正常終了時・中断時の共通出口 ===
-ExitHandler:
+'--- 後処理 ---
+Cleanup:
+    On Error Resume Next
     System.Cursor = wdCursorNormal
     isProcessing = False
     Exit Sub
 
-' === エラー発生時の処理 ===
-ErrorHandler:
-    MsgBox "処理中にエラーが発生しました。" & vbCrLf & "エラー内容: " & Err.Description, vbCritical
-    Resume ExitHandler
+' エラーの番号と内容を表示して、後処理へ進む
+HandleErr:
+    MsgBox "処理中にエラーが発生しました。" & vbCrLf & _
+           "エラー番号：" & Err.Number & vbCrLf & _
+           "内容：" & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
 
 ' ---------------------------------------------------------
@@ -93,7 +101,7 @@ End Sub
 Public Sub ExecuteTableFormat(ByVal actionType As String)
     isProcessing = True
     System.Cursor = wdCursorWait
-    On Error GoTo ErrorHandler
+    On Error GoTo HandleErr
 
     Dim tbl As Table
     Dim rw As Row
@@ -121,7 +129,7 @@ Public Sub ExecuteTableFormat(ByVal actionType As String)
                     rw.Cells(c).PreferredWidth = tbl.Rows(1).Cells(c).PreferredWidth
                     On Error Resume Next
                     rw.Cells(c).Width = tbl.Rows(1).Cells(c).Width
-                    On Error GoTo ErrorHandler
+                    On Error GoTo HandleErr
                 Next c
             End If
             
@@ -152,17 +160,20 @@ NextRow:
     ' 見出しセルが選択された状態になっているため、選択範囲を先頭に潰して解除する
     Selection.Collapse Direction:=wdCollapseStart
 
-' === 正常終了時・中断時の共通出口 ===
-ExitHandler:
+'--- 後処理 ---
+Cleanup:
+    On Error Resume Next
     Application.ScreenUpdating = True
     System.Cursor = wdCursorNormal
     isProcessing = False
     Exit Sub
 
-' === エラー発生時の処理 ===
-ErrorHandler:
-    MsgBox "処理中にエラーが発生しました。" & vbCrLf & "エラー内容: " & Err.Description, vbCritical
-    Resume ExitHandler
+' エラーの番号と内容を表示して、後処理へ進む
+HandleErr:
+    MsgBox "処理中にエラーが発生しました。" & vbCrLf & _
+           "エラー番号：" & Err.Number & vbCrLf & _
+           "内容：" & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
 
 ' ---------------------------------------------------------
@@ -172,7 +183,7 @@ Sub FormatDatesByHeader()
     If isProcessing Then Exit Sub
     isProcessing = True
     System.Cursor = wdCursorWait
-    On Error GoTo ErrorHandler
+    On Error GoTo HandleErr
 
     Dim tbl As Table
     Dim rw As Row
@@ -181,7 +192,7 @@ Sub FormatDatesByHeader()
     Dim dateVal As Date
     
     ' カーソルが表の中になければ終了処理へ飛ぶ
-    If Not Selection.Information(wdWithInTable) Then GoTo ExitHandler
+    If Not Selection.Information(wdWithInTable) Then GoTo Cleanup
     
     Set tbl = Selection.Tables(1)
     Application.ScreenUpdating = False
@@ -209,15 +220,18 @@ Sub FormatDatesByHeader()
     ' 選択状態を解除してカーソルを戻す
     Selection.Collapse Direction:=wdCollapseStart
 
-' === 正常終了時・中断時の共通出口 ===
-ExitHandler:
+'--- 後処理 ---
+Cleanup:
+    On Error Resume Next
     Application.ScreenUpdating = True
     System.Cursor = wdCursorNormal
     isProcessing = False
     Exit Sub
 
-' === エラー発生時の処理 ===
-ErrorHandler:
-    MsgBox "処理中にエラーが発生しました。" & vbCrLf & "エラー内容: " & Err.Description, vbCritical
-    Resume ExitHandler
+' エラーの番号と内容を表示して、後処理へ進む
+HandleErr:
+    MsgBox "処理中にエラーが発生しました。" & vbCrLf & _
+           "エラー番号：" & Err.Number & vbCrLf & _
+           "内容：" & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub

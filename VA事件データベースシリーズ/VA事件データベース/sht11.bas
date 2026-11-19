@@ -100,7 +100,7 @@ Private Sub Worksheet_Change(ByVal Target As Range)
                 If Range("事件[終了年月日]")(r).Value = "" Then
                     '今日の日付を自動入力するかユーザーに確認する
                     If MsgBox("終了年月日に今日の日付を入力します。" & vbCr & _
-                        "よろしいですか？", vbYesNo, "事件データベース") = vbYes Then _
+                        "よろしいですか？", vbYesNo + vbQuestion, strAppTitle) = vbYes Then _
                         Range("事件[終了年月日]")(r).Value = Date
                 End If
                 
@@ -201,7 +201,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
                 If Dir(Range("事件[データフォルダ]")(r).Value, vbDirectory) <> "" Then
                     ThisWorkbook.FollowHyperlink Range("事件[データフォルダ]")(r).Value
                 Else
-                    MsgBox "データフォルダが見つかりません。", vbExclamation, "事件データベース"
+                    MsgBox "データフォルダが見つかりません。", vbExclamation, strAppTitle
                 End If
                 On Error GoTo 0
             End If
@@ -212,7 +212,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
                 On Error Resume Next
                 ThisWorkbook.FollowHyperlink Range("事件[TeamsURL]")(r).Value
                 If Err.Number <> 0 Then
-                    MsgBox "URLを開けませんでした。" & vbCr & Err.Description, vbExclamation, "事件データベース"
+                    MsgBox "URLを開けませんでした。" & vbCr & Err.Description, vbExclamation, strAppTitle
                 End If
                 On Error GoTo 0
             End If
@@ -232,7 +232,7 @@ Private Sub InsertCase()
     ' シートが保護されている場合は新規追加をブロックする
     If Me.ProtectContents = True Then
         MsgBox "シートが保護されているため、新規事件の追加はできません。" & vbCrLf & _
-               "シートの保護を解除してから実行してください。", vbInformation, "事件データベース"
+               "シートの保護を解除してから実行してください。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -251,7 +251,7 @@ Private Sub InsertCase()
     End If
 
     '新規の依頼人か、既存の依頼人の追加案件かをユーザーに確認する
-    Select Case MsgBox("追加するのは、新規の依頼人ですか？", vbYesNoCancel, "事件データベース")
+    Select Case MsgBox("追加するのは、新規の依頼人ですか？", vbYesNoCancel + vbQuestion, strAppTitle)
         Case vbYes
             '-- 新規依頼人の場合 --
             Dim rTmp As Long
@@ -544,7 +544,7 @@ Sub CheckFolders(Optional ByVal dummy As Byte = 0)
     If shtOpt.Range("事件モード") = "入力" Then Me.Protect DrawingObjects:=True, Contents:=True, Scenarios:=True, AllowFiltering:=True
     
     '完了メッセージ
-    MsgBox "データフォルダのチェックを完了しました。", vbOKOnly, "事件データベース"
+    MsgBox "データフォルダのチェックを完了しました。", vbInformation, strAppTitle
     Application.StatusBar = ""
 End Sub
 
@@ -561,7 +561,7 @@ Private Sub CheckFolder(r As Long)
         On Error Resume Next
         If Dir(Range("事件[データフォルダ]")(r).Value, vbDirectory) = "" Then
             'エラーメッセージ
-            MsgBox "データフォルダの値が不正か、フォルダが存在しません。", vbCritical, "事件データベース"
+            MsgBox "データフォルダの値が不正か、フォルダが存在しません。", vbExclamation, strAppTitle
         End If
         On Error GoTo 0
     End If
@@ -586,13 +586,13 @@ Sub CheckNumbers(Optional ByVal dummy As Byte = 0)
             Range("事件[事件番号]")(r).Value = 0 Then
             
             'エラーメッセージ
-            MsgBox r & "行目の「事件番号」に重複または空白のデータがあります。", vbCritical, "事件データベース"
+            MsgBox r & "行目の「事件番号」に重複または空白のデータがあります。", vbExclamation, strAppTitle
             GoTo Cleanup
         End If
     Next
 
     '完了メッセージ
-    MsgBox "事件番号の重複および空白のチェックを完了しました。", vbOKOnly, "事件データベース"
+    MsgBox "事件番号の重複および空白のチェックを完了しました。", vbInformation, strAppTitle
 
 Cleanup:
     If shtOpt.Range("事件モード") = "入力" Then Me.Protect DrawingObjects:=True, Contents:=True, Scenarios:=True, AllowFiltering:=True
@@ -614,7 +614,7 @@ Private Sub MoveFolder(r As Long)
     
     '移動元が存在するか確認
     If Dir(strFolderA, vbDirectory) = "" Then
-        MsgBox "移動元フォルダが見つかりません: " & strFolderA, vbExclamation, "事件データベース"
+        MsgBox "移動元フォルダが見つかりません: " & strFolderA, vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -658,7 +658,7 @@ Private Sub MoveFolder(r As Long)
     End With
         
     If strFolderB = "" Then
-        MsgBox "移動先のフォルダルールが見つかりませんでした。", vbExclamation, "事件データベース"
+        MsgBox "移動先のフォルダルールが見つかりませんでした。", vbExclamation, strAppTitle
         Exit Sub
     End If
 
@@ -668,7 +668,7 @@ Private Sub MoveFolder(r As Long)
     If MsgBox("フォルダを以下の場所に移動します。" & vbCr & vbCr & _
         "移動元：" & strFolderA & vbCr & _
         "移動先：" & strFolderB & vbCr & vbCr & _
-        "よろしいですか？", vbOKCancel, "事件データベース") = vbCancel Then Exit Sub
+        "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then Exit Sub
 
     'ZIP移動処理の呼び出し
     Call Fldr.MoveInZip(strFolderA, strFolderB)
@@ -688,7 +688,7 @@ Private Sub MoveFolder(r As Long)
         'Dirチェックをしてフォルダが存在する場合のみ作成
         If Dir(strFolderB, vbDirectory) <> "" Then
              MkDir strFolderB & PS & "0000" & strTemp & "scan"
-             MsgBox "終了事件フォルダにscanフォルダを作成しました。", vbOKOnly, "事件データベース"
+             MsgBox "終了事件フォルダにscanフォルダを作成しました。", vbInformation, strAppTitle
         End If
     End If
     On Error GoTo 0
@@ -778,7 +778,7 @@ ContinueLoop:
     Exit Sub
 HdlErr:
     'エラーメッセージ
-    MsgBox "名前データの書き込みに失敗しました。" & vbCrLf & Err.Description, vbExclamation, "事件データベース"
+    MsgBox "名前データの書き込みに失敗しました。" & vbCrLf & Err.Description, vbExclamation, strAppTitle
     Application.StatusBar = ""
 End Sub
 
@@ -834,7 +834,7 @@ ContinueLoop:
     Exit Sub
 HdlErr:
     'エラーメッセージ
-    MsgBox "フォルダデータの書き込みに失敗しました。" & vbCrLf & Err.Description, vbExclamation, "事件データベース"
+    MsgBox "フォルダデータの書き込みに失敗しました。" & vbCrLf & Err.Description, vbExclamation, strAppTitle
     Application.StatusBar = ""
 End Sub
 

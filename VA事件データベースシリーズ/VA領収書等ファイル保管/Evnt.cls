@@ -1,49 +1,69 @@
-' 変数の宣言を強制する
 Option Explicit
-'================================================================================
-' イベント:  該当なし。他のプロシージャから呼び出される
-' 機能:      イベント処理の一時停止と処理速度向上のための設定を行います。
-' 概要:      画面描画の停止、マウスポインタの変更ウエイト、イベントの抑止、
-'            計算を手動設定に切り替えることで、マクロの実行速度を向上させます。
-'================================================================================
-' イベント処理を無効化するプロシージャ
-Sub Disable()
-    'イベント抑止と速度向上のための設定を行います
-    ' Applicationオブジェクトに対して一括設定を行う
-    With Application
-        ' 画面描画を停止する
-        .ScreenUpdating = False
-        ' マウスポインタを砂時計等のウエイトカーソルに変更する
-        .Cursor = xlWait
-        ' イベントの発生を抑止する
-        .EnableEvents = False
-        ' 数式の計算を手動計算に切り替える
-        .Calculation = xlCalculationManual
-    ' With句を終了する
-    End With
-' プロシージャを終了する
-End Sub
 
 '================================================================================
-' イベント:  該当なし。他のプロシージャから呼び出される
-' 機能:      イベント処理の一時停止と処理速度向上のための設定を解除します。
-' 概要:      Disableで設定した項目の設定を元に戻し、自動計算、イベントの開始、
-'            標準カーソルへの復帰、画面描画の再開を行います。
+' モジュール名: Evnt
+' 概要:         マクロの処理の間、Excel の画面更新・イベント・自動計算を止め、
+'               処理が終わったら、止める前の値に戻すクラスモジュールです。
+' 備考:         VA事件データベースシリーズの4本（事件データベース・ファイル保管・
+'               領収書等ファイル保管・電話メモ）が、同じものを写して持ちます。
+'               1つを直したら、ほかの3本も同じに直します（標準 03「ツールどうしの関係」）。
+'               利用者が自動計算を手動にしていても、処理の後に手動のまま戻すため、
+'               止める前の値を控えておきます（2026-11-19。それまでは自動などに決め打ちで戻していた）。
 '================================================================================
-' イベント処理を有効化するプロシージャ
-Sub Enable()
-    'イベント抑止と速度向上のための設定を解除します
-    ' Applicationオブジェクトに対して一括設定を行う
+
+'止める前の値（Disable で控え、Enable で戻す）
+Private blnSaved As Boolean             '控えた値があるか（Disable の後、Enable の前は True）
+Private blnEverSaved As Boolean         '一度でも値を控えたか
+Private blnScreenUpdating As Boolean    '画面の更新
+Private blnEnableEvents As Boolean      'イベント
+Private lngCalculation As Long          '計算の方法（自動・手動）
+Private lngCursor As Long               'マウスポインタ
+
+'--------------------------------------------------------------------------------
+' 概要：画面の更新・イベント・自動計算を止め、マウスポインタを待機の形にする。
+'       止める前の値を控える（Enable の前に Disable がもう一度呼ばれたときは、最初に控えた値を残す）。
+' 引数：なし
+' 戻り値：なし
+'--------------------------------------------------------------------------------
+Sub Disable()
     With Application
-        ' 数式の計算を自動計算に戻す
-        .Calculation = xlCalculationAutomatic
-        ' イベントの発生を開始（許可）する
-        .EnableEvents = True
-        ' マウスポインタを標準カーソルに戻す
-        .Cursor = xlNormal
-        ' 画面描画を再開する
-        .ScreenUpdating = True
-    ' With句を終了する
+        '止める前の値を控える（2回目の Disable で、止めた後の値を控えないようにする）
+        If Not blnSaved Then
+            blnScreenUpdating = .ScreenUpdating
+            blnEnableEvents = .EnableEvents
+            lngCalculation = .Calculation
+            lngCursor = .Cursor
+            blnSaved = True
+            blnEverSaved = True
+        End If
+
+        .ScreenUpdating = False
+        .Cursor = xlWait
+        .EnableEvents = False
+        .Calculation = xlCalculationManual
     End With
-' プロシージャを終了する
+End Sub
+
+'--------------------------------------------------------------------------------
+' 概要：Disable で止めたものを、止める前の値に戻す。
+'       一度も値を控えていないとき（Disable の前にエラーで止まったときなど）は、
+'       Excel の既定の値（自動計算・イベントあり・画面の更新あり）に戻す。
+' 引数：なし
+' 戻り値：なし
+'--------------------------------------------------------------------------------
+Sub Enable()
+    With Application
+        If blnEverSaved Then
+            .Calculation = lngCalculation
+            .EnableEvents = blnEnableEvents
+            .Cursor = lngCursor
+            .ScreenUpdating = blnScreenUpdating
+        Else
+            .Calculation = xlCalculationAutomatic
+            .EnableEvents = True
+            .Cursor = xlDefault
+            .ScreenUpdating = True
+        End If
+    End With
+    blnSaved = False
 End Sub

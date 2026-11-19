@@ -58,7 +58,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
             '新しい行の場合
             If r = Range("保管").Rows.Count + 1 Then
                 '保管対象ファイルを読み込む
-                If MsgBox("読込フォルダ内のファイル名を読み込みます。", vbOKCancel) = vbOK Then
+                If MsgBox("読込フォルダ内のファイル名を読み込みます。", vbOKCancel + vbQuestion, strAppTitle) = vbOK Then
                     'ファイル名を読み込む
                     Call ReadFileNames
                 End If
@@ -76,7 +76,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
                     ThisWorkbook.FollowHyperlink Range("保管[読込フォルダ名]")(r).Value
                     On Error GoTo 0
                 Else
-                    MsgBox "フォルダが見つかりませんでした。"
+                    MsgBox "フォルダが見つかりませんでした。", vbExclamation, strAppTitle
                 End If
             End If
 
@@ -96,7 +96,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
                             Range("保管[読込フォルダ名]")(r).Value & "\" & Range("保管[読込ファイル名]")(r).Value
                         On Error GoTo 0
                     Else
-                        MsgBox "ファイルが見つかりませんでした。"
+                        MsgBox "ファイルが見つかりませんでした。", vbExclamation, strAppTitle
                     End If
                 End If
             End If
@@ -113,7 +113,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
                     ThisWorkbook.FollowHyperlink Range("保管[保管フォルダ名]")(r).Value
                     On Error GoTo 0
                 Else
-                    MsgBox "フォルダが見つかりませんでした。"
+                    MsgBox "フォルダが見つかりませんでした。", vbExclamation, strAppTitle
                 End If
 
                 '処理を終了する
@@ -146,7 +146,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
                             Range("保管[保管フォルダ名]")(r).Value & "\" & Range("保管[保管ファイル名]")(r).Value
                         On Error GoTo 0
                     Else
-                        MsgBox "ファイルが見つかりませんでした。"
+                        MsgBox "ファイルが見つかりませんでした。", vbExclamation, strAppTitle
                     End If
 
                     '処理を終了する
@@ -357,7 +357,7 @@ Sub ReadFileNames()
 
         '読み込みフォルダの存在を確認する
         If Dir(strFolder, vbDirectory) = "" Then
-            MsgBox "読み込みファイルのフォルダが見つかりません。", vbExclamation
+            MsgBox "読み込みファイルのフォルダが見つかりません。", vbExclamation, strAppTitle
             Exit Sub
         End If
 
@@ -475,9 +475,9 @@ NextFolder:
 
     '読み込み結果のメッセージを表示
     If lngReadCnt = 0 Then
-        MsgBox "読み込まれていないファイルが見つかりませんでした。"
+        MsgBox "読み込まれていないファイルが見つかりませんでした。", vbInformation, strAppTitle
     Else
-        MsgBox lngReadCnt & "個のファイルを読み込みました。"
+        MsgBox lngReadCnt & "個のファイルを読み込みました。", vbInformation, strAppTitle
     End If
 
     Application.StatusBar = ""
@@ -486,7 +486,7 @@ NextFolder:
 
 errInvalidFileName:
     MsgBox "ファイルの読み込みが異常終了しました。" & vbCrLf & _
-        "読み込みフォルダ内に不正なファイル名が存在する可能性があります。", vbExclamation
+        "読み込みフォルダ内に不正なファイル名が存在する可能性があります。", vbExclamation, strAppTitle
 
     Application.StatusBar = ""
 
@@ -549,16 +549,16 @@ Sub MoveFile()
     Exit Sub
 
 HdlPrelimErr:
-    MsgBox strErrMsg & vbCr & vbCr & "このファイルの移動を中止しました。", vbExclamation
+    MsgBox strErrMsg & vbCr & vbCr & "このファイルの移動を中止しました。", vbExclamation, strAppTitle
     Application.StatusBar = ""
     Exit Sub
 
 HdlWriteErr:
     MsgBox "このファイルを移動できませんでした。" & vbCr & _
         "次のような原因が考えられます。" & vbCr & vbCr & _
-        "・ファイルが別のアプロケーションで開かれている。" & vbCr & _
+        "・ファイルが別のアプリケーションで開かれている。" & vbCr & _
         "・ファイル名に使うことのできない文字が含まれている。" _
-        , vbExclamation
+        , vbExclamation, strAppTitle
     Application.StatusBar = ""
     Exit Sub
 
@@ -625,16 +625,16 @@ Sub RstrFile()
     Exit Sub
 
 HdlPrelimErr:
-    MsgBox strErrMsg & vbCr & vbCr & "このファイルの元のフォルダへの移動を中止しました。", vbExclamation
+    MsgBox strErrMsg & vbCr & vbCr & "このファイルの元のフォルダへの移動を中止しました。", vbExclamation, strAppTitle
     Application.StatusBar = ""
     Exit Sub
 
 HdlWriteErr:
     MsgBox "このファイルを元のフォルダに移動できませんでした。" & vbCr & _
         "次のような原因が考えられます。" & vbCr & vbCr & _
-        "・ファイルが別のアプロケーションで開かれている。" & vbCr & _
+        "・ファイルが別のアプリケーションで開かれている。" & vbCr & _
         "・ファイル名に使うことのできない文字が含まれている。" _
-        , vbExclamation
+        , vbExclamation, strAppTitle
     Application.StatusBar = ""
     Exit Sub
 

@@ -11,7 +11,7 @@ Sub Move(strFolderA As String, strFolderB As String)
         ' --- Mac用の処理 (Nameステートメントによる移動) ---
         '移動元フォルダが存在しなければエラー終了
         If Dir(strFolderA, vbDirectory) = "" Then
-            MsgBox "移動前のフォルダが存在しません"
+            MsgBox "移動前のフォルダが存在しません", vbExclamation, strAppTitle
             Exit Sub
         End If
         
@@ -28,7 +28,7 @@ Sub Move(strFolderA As String, strFolderB As String)
         Application.StatusBar = ""
         Exit Sub
 MacError:
-        MsgBox "Macでのフォルダ移動に失敗しました。" & vbCr & "移動先:" & strFolderB
+        MsgBox "Macでのフォルダ移動に失敗しました。" & vbCr & "移動先:" & strFolderB, vbExclamation, strAppTitle
         Application.StatusBar = ""
         Exit Sub
         
@@ -40,7 +40,7 @@ MacError:
 
         '移動元フォルダが存在しなければエラー終了
         If FSO.folderexists(strFolderA) = False Then
-            MsgBox ("移動前のフォルダが存在しません")
+            MsgBox "移動前のフォルダが存在しません", vbExclamation, strAppTitle
             GoTo ExitHandler
         End If
 
@@ -66,19 +66,19 @@ MacError:
             If MsgBox("別ドライブへの移動が指示されました。" & vbCr & _
                       "安全のためコピーのみ行います。" & vbCr & _
                       "フォルダの容量によっては処理に長時間がかかる場合があります。" & vbCr & _
-                      "よろしいですか？", vbExclamation + vbOKCancel) = vbCancel Then GoTo Skip4
+                      "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then GoTo Skip4
                       
             On Error GoTo Skip3
             Application.StatusBar = "フォルダのコピーを行っています。"
             'フォルダをコピー
             FSO.CopyFolder strFolderA, strFolderB
             MsgBox "フォルダのコピーを完了しました。" & vbCr & _
-                   "コピーが完了していることを確認してください。"
+                   "コピーが完了していることを確認してください。", vbInformation, strAppTitle
 
             '元フォルダ削除確認
             If MsgBox("元のフォルダを削除します。" & vbCr & _
                       "コピー完了を確認することを強く推奨します。" & vbCr & _
-                      "よろしいですか？", vbExclamation + vbOKCancel) = vbCancel Then GoTo Skip4
+                      "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then GoTo Skip4
             
             '元フォルダ削除
             FSO.DeleteFolder strFolderA
@@ -87,16 +87,16 @@ MacError:
         GoTo ExitHandler
 
 Skip1:
-        MsgBox "フォルダを作成できませんでした。"
+        MsgBox "フォルダを作成できませんでした。", vbExclamation, strAppTitle
         GoTo ExitHandler
 Skip2:
-        MsgBox "フォルダを移動できませんでした。"
+        MsgBox "フォルダを移動できませんでした。", vbExclamation, strAppTitle
         GoTo ExitHandler
 Skip3:
-        MsgBox "フォルダをコピーまたは削除できませんでした。"
+        MsgBox "フォルダをコピーまたは削除できませんでした。", vbExclamation, strAppTitle
         GoTo ExitHandler
 Skip4:
-        MsgBox "キャンセルしました。"
+        MsgBox "キャンセルしました。", vbInformation, strAppTitle
         GoTo ExitHandler
 ExitHandler:
         Application.StatusBar = ""
@@ -126,7 +126,7 @@ Sub MoveInZip(strFolderA As String, strFolderB As String)
         MkDir strFolderB
         On Error GoTo 0
         
-        If MsgBox("ZIPファイルの移動を行います。" & vbCr & "よろしいですか？", vbExclamation + vbOKCancel) = vbCancel Then Exit Sub
+        If MsgBox("ZIPファイルの移動を行います。" & vbCr & "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then Exit Sub
         
         '移動
         On Error GoTo MacSkip3
@@ -135,20 +135,20 @@ Sub MoveInZip(strFolderA As String, strFolderB As String)
         'Finderを開く
         Shell "open """ & strFolderB & """", vbNormalFocus
         
-        MsgBox "ZIPファイルの移動が完了しました。", vbExclamation
+        MsgBox "ZIPファイルの移動が完了しました。", vbInformation, strAppTitle
         
-        If MsgBox("元のフォルダを削除します。" & vbCr & "よろしいですか？", vbExclamation + vbOKCancel) = vbCancel Then Exit Sub
+        If MsgBox("元のフォルダを削除します。" & vbCr & "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then Exit Sub
         
         'Macでフォルダ削除はリスクが高いため、ここではZIP移動のみで止めるか、
         'シェルコマンド rm -rf を使う必要があるが、安全のためメッセージのみとする
-        MsgBox "Mac版では安全のため、元のフォルダ削除は手動で行ってください。"
+        MsgBox "Mac版では安全のため、元のフォルダ削除は手動で行ってください。", vbExclamation, strAppTitle
         Exit Sub
         
 MacSkip2:
-        MsgBox "Zipファイルが存在しません。"
+        MsgBox "Zipファイルが存在しません。", vbExclamation, strAppTitle
         Exit Sub
 MacSkip3:
-        MsgBox "移動に失敗しました。"
+        MsgBox "移動に失敗しました。", vbExclamation, strAppTitle
         Exit Sub
         
     #Else
@@ -158,7 +158,7 @@ MacSkip3:
 
         '移動元が存在しなければエラー
         If FSO.folderexists(strFolderA) = False Then
-            MsgBox ("移動前のフォルダが存在しません")
+            MsgBox "移動前のフォルダが存在しません", vbExclamation, strAppTitle
             GoTo ExitHandler
         End If
 
@@ -178,7 +178,7 @@ MacSkip3:
         '移動確認
         If MsgBox("ZIPファイルの移動を行います。" & vbCr & _
                   "フォルダの容量によっては処理に長時間がかかる場合があります。" & vbCr & _
-                  "よろしいですか？", vbExclamation + vbOKCancel) = vbCancel Then GoTo Skip
+                  "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then GoTo Skip
 
         '移動先フォルダ作成
         If FSO.folderexists(strFolderB) = False Then
@@ -194,13 +194,13 @@ MacSkip3:
         Shell "C:\windows\explorer.exe " & strFolderB & "\", vbNormalFocus
 
         MsgBox "ZIPファイルの移動が完了しました。" & vbCr & _
-               "エクスプローラーでZIPファイルを開き、移動が完了していることを確認してください。", vbExclamation
+               "エクスプローラーでZIPファイルを開き、移動が完了していることを確認してください。", vbInformation, strAppTitle
 
         On Error GoTo Skip4
 
         '元フォルダ削除確認
         If MsgBox("元のフォルダを削除します。" & vbCr & _
-                  "よろしいですか？", vbExclamation + vbOKCancel) = vbCancel Then GoTo Skip
+                  "よろしいですか？", vbOKCancel + vbQuestion, strAppTitle) = vbCancel Then GoTo Skip
 
         '元フォルダ削除
         FSO.DeleteFolder strFolderA
@@ -208,19 +208,19 @@ MacSkip3:
         GoTo ExitHandler
 
 Skip:
-        MsgBox "キャンセルしました。"
+        MsgBox "キャンセルしました。", vbInformation, strAppTitle
         GoTo ExitHandler
 Skip1:
-        MsgBox "新しいフォルダを作成できませんでした。"
+        MsgBox "新しいフォルダを作成できませんでした。", vbExclamation, strAppTitle
         GoTo ExitHandler
 Skip2:
-        MsgBox "Zipファイルが存在しません。"
+        MsgBox "Zipファイルが存在しません。", vbExclamation, strAppTitle
         GoTo ExitHandler
 Skip3:
-        MsgBox "圧縮ファイルをコピーできませんでした。"
+        MsgBox "圧縮ファイルをコピーできませんでした。", vbExclamation, strAppTitle
         GoTo ExitHandler
 Skip4:
-        MsgBox "元のフォルダを削除できませんでした。"
+        MsgBox "元のフォルダを削除できませんでした。", vbExclamation, strAppTitle
         GoTo ExitHandler
 ExitHandler:
         Set FSO = Nothing

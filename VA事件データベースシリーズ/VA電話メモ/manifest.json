@@ -7,6 +7,7 @@
     {"name": "shtMan", "type": "Document", "file": "shtMan.bas"},
     {"name": "Setup", "type": "Standard", "file": "Setup.bas"},
     {"name": "Mail", "type": "Standard", "file": "Mail.bas"},
-    {"name": "Evnt", "type": "Class", "file": "Evnt.cls"}
+    {"name": "Evnt", "type": "Class", "file": "Evnt.cls"},
+    {"name": "cstSettings", "type": "Standard", "file": "cstSettings.bas"}
   ]
 }

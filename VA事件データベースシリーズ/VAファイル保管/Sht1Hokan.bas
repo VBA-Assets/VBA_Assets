@@ -41,7 +41,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
             ' 新しい行（データ末尾の次の行）の場合
             If r = rngTable.Rows.Count + 1 Then
                 ' 保管対象ファイルを読み込むか確認
-                If MsgBox("読込フォルダ内のファイル名を読み込みます。", vbOKCancel) = vbOK Then
+                If MsgBox("読込フォルダ内のファイル名を読み込みます。", vbOKCancel + vbQuestion, strAppTitle) = vbOK Then
                     ' ファイル名を読み込むプロシージャを呼び出し
                     Call ReadFileNames
                 End If
@@ -58,7 +58,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
                     ' 読込フォルダをエクスプローラー等で開く
                     ThisWorkbook.FollowHyperlink Range("保管[読込フォルダ名]")(r).Value
                 Else
-                    MsgBox "フォルダが見つかりませんでした。"
+                    MsgBox "フォルダが見つかりませんでした。", vbExclamation, strAppTitle
                 End If
                 On Error GoTo 0
             End If
@@ -78,7 +78,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
                         ' 読込ファイルを開く
                         ThisWorkbook.FollowHyperlink strFullPath
                     Else
-                        MsgBox "ファイルが見つかりませんでした。"
+                        MsgBox "ファイルが見つかりませんでした。", vbExclamation, strAppTitle
                     End If
                     On Error GoTo 0
                 End If
@@ -134,7 +134,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
                     ThisWorkbook.FollowHyperlink Range("保管[保管フォルダ名]")(r).Value
                     On Error GoTo 0
                 Else
-                    MsgBox "フォルダが見つかりませんでした。"
+                    MsgBox "フォルダが見つかりませんでした。", vbExclamation, strAppTitle
                 End If
             '保管フォルダ名が入力されていない場合
             Else
@@ -163,7 +163,7 @@ Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean
                             Range("保管[保管フォルダ名]")(r).Value & "\" & Range("保管[保管ファイル名]")(r).Value
                         On Error GoTo 0
                     Else
-                        MsgBox "ファイルが見つかりませんでした。"
+                        MsgBox "ファイルが見つかりませんでした。", vbExclamation, strAppTitle
                     End If
                 ' 保管ファイル名が入力未了の場合
                 Else
@@ -463,7 +463,7 @@ Sub ReadFileNames()
             ' フォルダが存在しない場合の処理です（追加修正）。
             Else
                 ' フォルダが見つからない旨の警告メッセージを表示します。
-                MsgBox strFolder & " が見つかりません。", vbExclamation
+                MsgBox strFolder & " が見つかりません。", vbExclamation, strAppTitle
             ' フォルダ存在確認の条件分岐を終了します。
             End If
         ' 空白判定の条件分岐を終了します。
@@ -541,7 +541,7 @@ Sub ReadFileNames()
         If Err.Number <> 0 Then
             ' エラーが発生した旨をメッセージボックスで表示します。
             MsgBox strFolder & "の読み込み時にエラーが発生しました。" & vbCr & _
-                "次のフォルダを読み込みます。", vbExclamation
+                "次のフォルダを読み込みます。", vbExclamation, strAppTitle
             ' エラーの情報をクリアします。
             Err.Clear
             ' 現在のフォルダ処理を中断し、次のフォルダの処理（NextFolderラベル）へジャンプします。
@@ -629,7 +629,7 @@ HandleFileError:
         ' フォルダ内で初めてエラーが発生したか（フラグがFalseか）判定します。
         If blnErrorShown = False Then
             ' 初回のみ、読み込めないファイルが存在した旨をメッセージボックスで表示します。
-            MsgBox strFolder & "に読み込めないファイルがありました。", vbExclamation
+            MsgBox strFolder & "に読み込めないファイルがありました。", vbExclamation, strAppTitle
             ' フラグをTrueに変更し、同フォルダ内でこれ以上メッセージが表示されないようにします。
             blnErrorShown = True
         ' エラー表示判定の条件分岐を終了します。
@@ -650,12 +650,12 @@ NextFolder:
     If lngReadCnt = 0 Then
         ' 0件であった旨の完了メッセージを表示します。
         MsgBox "読込ファイル名の読み込みを完了しました。" & vbCr & _
-            "読み込むファイルがありませんでした。", vbInformation
+            "読み込むファイルがありませんでした。", vbInformation, strAppTitle
     ' 1件以上のファイルを読み込んだ場合の処理です。
     Else
         ' 読み込んだファイル数を含む完了メッセージを表示します。
         MsgBox "読込ファイル名の読み込みを完了しました。" & vbCr & _
-            lngReadCnt & "個のファイル名を読み込みました。", vbInformation
+            lngReadCnt & "個のファイル名を読み込みました。", vbInformation, strAppTitle
     ' 完了メッセージ表示の条件分岐を終了します。
     End If
 
@@ -757,7 +757,7 @@ Private Sub MoveFile(r As Long)
     Exit Sub
 
 HdlPrelimErr:
-    MsgBox strErrMsg & vbCr & vbCr & "このファイルの移動を中止しました。", vbExclamation
+    MsgBox strErrMsg & vbCr & vbCr & "このファイルの移動を中止しました。", vbExclamation, strAppTitle
     Application.StatusBar = ""
     Set fso = Nothing
     Exit Sub
@@ -765,9 +765,9 @@ HdlPrelimErr:
 HdlWriteErr:
     MsgBox "このファイルを移動できませんでした。" & vbCr & _
         "次のような原因が考えられます。" & vbCr & vbCr & _
-        "・ファイルが別のアプロケーションで開かれている。" & vbCr & _
+        "・ファイルが別のアプリケーションで開かれている。" & vbCr & _
         "・ファイル名に使うことのできない文字が含まれている。" & vbCr & _
-        "詳細: " & Err.Description, vbExclamation
+        "詳細: " & Err.Description, vbExclamation, strAppTitle
     Application.StatusBar = ""
     Set fso = Nothing
 End Sub
@@ -828,7 +828,7 @@ Private Sub RstrFile(r As Long)
     Exit Sub
 
 HdlPrelimErr:
-    MsgBox strErrMsg & vbCr & vbCr & "このファイルの元のフォルダへの移動を中止しました。", vbExclamation
+    MsgBox strErrMsg & vbCr & vbCr & "このファイルの元のフォルダへの移動を中止しました。", vbExclamation, strAppTitle
     Application.StatusBar = ""
     Set fso = Nothing
     Exit Sub
@@ -836,9 +836,9 @@ HdlPrelimErr:
 HdlWriteErr:
     MsgBox "このファイルを元のフォルダに移動できませんでした。" & vbCr & _
         "次のような原因が考えられます。" & vbCr & vbCr & _
-        "・ファイルが別のアプロケーションで開かれている。" & vbCr & _
+        "・ファイルが別のアプリケーションで開かれている。" & vbCr & _
         "・ファイル名に使うことのできない文字が含まれている。" & vbCr & _
-        "詳細: " & Err.Description, vbExclamation
+        "詳細: " & Err.Description, vbExclamation, strAppTitle
     Application.StatusBar = ""
     Set fso = Nothing
 End Sub
@@ -929,7 +929,7 @@ Private Sub MakeShortcuts(r As Long)
     Exit Sub
 
 HdlPrelimErr:
-    MsgBox strErrMsg & vbCr & vbCr & "このファイルのショートカットの作成を中止しました。", vbExclamation
+    MsgBox strErrMsg & vbCr & vbCr & "このファイルのショートカットの作成を中止しました。", vbExclamation, strAppTitle
     Set objWshShell = Nothing
     Application.StatusBar = ""
     Exit Sub
@@ -937,7 +937,7 @@ HdlPrelimErr:
 HdlWriteErr:
     MsgBox "このファイルのショートカットを作成できませんでした。" & vbCr & _
         "次のような原因が考えられます。" & vbCr & vbCr & _
-        "・ファイル名に使うことのできない文字が含まれている。", vbExclamation
+        "・ファイル名に使うことのできない文字が含まれている。", vbExclamation, strAppTitle
     Set objWshShell = Nothing
     Application.StatusBar = ""
 End Sub
@@ -1005,14 +1005,14 @@ Private Sub DeleteShortcuts(r As Long)
     Exit Sub
 
 HdlPrelimErr:
-    MsgBox strErrMsg & vbCr & vbCr & "このファイルのショートカットの削除を中止しました。", vbExclamation
+    MsgBox strErrMsg & vbCr & vbCr & "このファイルのショートカットの削除を中止しました。", vbExclamation, strAppTitle
     Application.StatusBar = ""
     Exit Sub
 
 HdlErr:
     MsgBox "このファイルのショートカットを削除できませんでした。" & vbCr & _
         "次のような原因が考えられます。" & vbCr & vbCr & _
-        "・ファイルが別のアプロケーションで開かれている。", vbExclamation
+        "・ファイルが別のアプリケーションで開かれている。", vbExclamation, strAppTitle
     Application.StatusBar = ""
 End Sub
 
@@ -1088,14 +1088,14 @@ Private Sub MakeCopies(r As Long)
     Exit Sub
 
 HdlPrelimErr:
-    MsgBox strErrMsg & vbCr & vbCr & "このファイルのコピーの作成を中止しました。", vbExclamation
+    MsgBox strErrMsg & vbCr & vbCr & "このファイルのコピーの作成を中止しました。", vbExclamation, strAppTitle
     Application.StatusBar = ""
     Exit Sub
 
 HdlWriteErr:
     MsgBox "このファイルのコピーを作成できませんでした。" & vbCr & _
         "次のような原因が考えられます。" & vbCr & vbCr & _
-        "・ファイル名に使うことのできない文字が含まれている。", vbExclamation
+        "・ファイル名に使うことのできない文字が含まれている。", vbExclamation, strAppTitle
     Application.StatusBar = ""
 End Sub
 
@@ -1161,14 +1161,14 @@ Private Sub DeleteCopies(r As Long)
     Exit Sub
 
 HdlPrelimErr:
-    MsgBox strErrMsg & vbCr & vbCr & "このファイルのコピーの削除を中止しました。", vbExclamation
+    MsgBox strErrMsg & vbCr & vbCr & "このファイルのコピーの削除を中止しました。", vbExclamation, strAppTitle
     Application.StatusBar = ""
     Exit Sub
 
 HdlErr:
     MsgBox "このファイルのコピーを削除できませんでした。" & vbCr & _
         "次のような原因が考えられます。" & vbCr & vbCr & _
-        "・ファイルが別のアプロケーションで開かれている。", vbExclamation
+        "・ファイルが別のアプリケーションで開かれている。", vbExclamation, strAppTitle
     Application.StatusBar = ""
 End Sub
 
@@ -1222,18 +1222,18 @@ Private Sub MakeCopyOfSpecialFile(r As Long, strDocType As String)
     End If
 
     Application.StatusBar = ""
-    MsgBox strDocType & "保管フォルダにコピーを作成しました。"
+    MsgBox strDocType & "保管フォルダにコピーを作成しました。", vbInformation, strAppTitle
     Exit Sub
 
 HdlPrelimErr:
-    MsgBox strErrMsg & vbCr & vbCr & strDocType & "のコピーの作成を中止しました。", vbExclamation
+    MsgBox strErrMsg & vbCr & vbCr & strDocType & "のコピーの作成を中止しました。", vbExclamation, strAppTitle
     Application.StatusBar = ""
     Exit Sub
 
 HdlWriteErr:
     MsgBox strDocType & "のコピーを作成できませんでした。" & vbCr & _
         "次のような原因が考えられます。" & vbCr & vbCr & _
-        "・ファイル名に使うことのできない文字が含まれている。", vbExclamation
+        "・ファイル名に使うことのできない文字が含まれている。", vbExclamation, strAppTitle
     Application.StatusBar = ""
 End Sub
 
@@ -1275,18 +1275,18 @@ Private Sub DeleteCopyOfSpecialFile(r As Long, strDocType As String)
     End If
         
     Application.StatusBar = ""
-    MsgBox strDocType & "保管フォルダのコピーを削除しました。"
+    MsgBox strDocType & "保管フォルダのコピーを削除しました。", vbInformation, strAppTitle
     Exit Sub
 
 HdlPrelimErr:
-    MsgBox strErrMsg & vbCr & vbCr & strDocType & "のコピーの削除を中止しました。", vbExclamation
+    MsgBox strErrMsg & vbCr & vbCr & strDocType & "のコピーの削除を中止しました。", vbExclamation, strAppTitle
     Application.StatusBar = ""
     Exit Sub
 
 HdlErr:
     MsgBox strDocType & "のコピーを削除できませんでした。" & vbCr & _
         "次のような原因が考えられます。" & vbCr & vbCr & _
-        "・ファイルが別のアプロケーションで開かれている。", vbExclamation
+        "・ファイルが別のアプリケーションで開かれている。", vbExclamation, strAppTitle
     Application.StatusBar = ""
 End Sub
 

@@ -1,7 +1,8 @@
 {
-  "project": "EvidenceExplanation",
+  "project": "VA_EvidenceExplanation",
   "modules": [
     {"name": "ThisDocument", "type": "Document", "file": "ThisDocument.bas"},
-    {"name": "frmMergeSplit", "type": "Form", "file": "frmMergeSplit.frm"}
+    {"name": "frmMergeSplit", "type": "Form", "file": "frmMergeSplit.frm"},
+    {"name": "cstSettings", "type": "Standard", "file": "cstSettings.bas"}
   ]
 }

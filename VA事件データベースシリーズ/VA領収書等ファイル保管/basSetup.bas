@@ -15,8 +15,9 @@ Public Evnt As New Evnt
 '--------------------------------------------------
 ' VAブリッジのロード完了後イベントプロシージャ
 Public Sub VABridge_AfterLoad(Optional ByVal dummy As Byte = 0)
-    ' エラー発生時はErrHandlerラベルへジャンプする
-    On Error GoTo ErrHandler
+    '--- 前処理 ---
+    ' エラー発生時はHandleErrラベルへジャンプする
+    On Error GoTo HandleErr
     
     ' イベント処理および画面更新を一時的に無効化する
     Evnt.Disable
@@ -56,18 +57,20 @@ Public Sub VABridge_AfterLoad(Optional ByVal dummy As Byte = 0)
 
     ' 日次バックアップ処理を呼び出す
     Call PerformDailyBackup
-    ' イベント処理および画面更新を有効化して元に戻す
+
+Cleanup:
+    '--- 後処理 ---
+    ' イベント処理および画面更新を、停止する前の値に戻す（エラーのときも通る）
+    On Error Resume Next
     Evnt.Enable
-    ' エラーがなければプロシージャを終了する
     Exit Sub
 
-' エラー処理用のラベル
-ErrHandler:
-    ' エラー内容をメッセージボックスで表示する
-    MsgBox "初期化処理中にエラーが発生しました。", vbCritical, "ファイル保管"
-    ' イベント処理および画面更新を有効化して元に戻す
-    Evnt.Enable
-' プロシージャを終了する
+HandleErr:
+    ' エラーの番号と内容を表示して、後処理へ進む
+    MsgBox "データを読み込んだ後の処理でエラーが発生しました。" & vbCrLf & _
+           "エラー番号：" & Err.Number & vbCrLf & _
+           "内容：" & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
 
 '--------------------------------------------------------------------------------
@@ -134,7 +137,7 @@ HandleErr:
     MsgBox "自動バックアップの作成中にエラーが発生しました。" & vbCrLf & _
            "保存先：" & strBackupFolder & vbCrLf & _
            "エラー番号：" & Err.Number & vbCrLf & _
-           "内容：" & Err.Description, vbExclamation, "VA領収書等ファイル保管"
+           "内容：" & Err.Description, vbExclamation, strAppTitle
     Resume Cleanup
 End Sub
 

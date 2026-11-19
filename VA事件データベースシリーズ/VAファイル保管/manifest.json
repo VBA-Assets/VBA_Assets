@@ -7,6 +7,7 @@
     {"name": "ShtOption", "type": "Document", "file": "ShtOption.bas"},
     {"name": "ShtManual", "type": "Document", "file": "ShtManual.bas"},
     {"name": "Setup", "type": "Standard", "file": "Setup.bas"},
-    {"name": "Evnt", "type": "Class", "file": "Evnt.cls"}
+    {"name": "Evnt", "type": "Class", "file": "Evnt.cls"},
+    {"name": "cstSettings", "type": "Standard", "file": "cstSettings.bas"}
   ]
 }

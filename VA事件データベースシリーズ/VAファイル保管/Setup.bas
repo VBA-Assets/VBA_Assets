@@ -20,9 +20,10 @@ Public Evnt As New Evnt                  ' Evntクラス（イベント制御）
 '                 マクロメニューに表示させないため、ダミー引数(Optional)を設定しています。
 '================================================================================
 Public Sub VABridge_AfterLoad(Optional ByVal dummy As Byte = 0)
+    '--- 前処理 ---
     ' エラーが発生した場合の処理先を指定します
-    On Error GoTo ErrHandler
-    
+    On Error GoTo HandleErr
+
     ' 【修正】SortAndFormatTable呼び出し前にイベントを停止する
     ' これにより、SortAndFormatTable内でのScreenUpdating操作が不要になります。
     Evnt.Disable
@@ -60,19 +61,20 @@ Public Sub VABridge_AfterLoad(Optional ByVal dummy As Byte = 0)
 
     ' バックアップ処理を実行します
     PerformDailyBackup
-    
-    ' イベント等を再開します
+
+Cleanup:
+    '--- 後処理 ---
+    ' イベント等を、停止する前の値に戻します（エラーのときも通ります）
+    On Error Resume Next
     Evnt.Enable
-    
-    ' 処理を終了します
     Exit Sub
 
-ErrHandler:
-    ' エラーメッセージを表示します
-    MsgBox "初期化処理中にエラーが発生しました。", vbCritical, "ファイル保管"
-    ' イベント等を確実に再開させます
-    Evnt.Enable
-    
+HandleErr:
+    ' エラーの番号と内容を表示して、後処理へ進みます
+    MsgBox "データを読み込んだ後の処理でエラーが発生しました。" & vbCrLf & _
+           "エラー番号：" & Err.Number & vbCrLf & _
+           "内容：" & Err.Description, vbExclamation, strAppTitle
+    Resume Cleanup
 End Sub
 
 
@@ -140,7 +142,7 @@ HandleErr:
     MsgBox "自動バックアップの作成中にエラーが発生しました。" & vbCrLf & _
            "保存先：" & strBackupFolder & vbCrLf & _
            "エラー番号：" & Err.Number & vbCrLf & _
-           "内容：" & Err.Description, vbExclamation, "VAファイル保管"
+           "内容：" & Err.Description, vbExclamation, strAppTitle
     Resume Cleanup
 End Sub
 
