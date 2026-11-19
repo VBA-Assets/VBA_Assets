@@ -4,12 +4,12 @@ Option Explicit
 ' フォームに必要なコントロール（VBEフォームデザイナーで設定してください）
 '
 ' cboProjectList   ComboBox   プロジェクト選択
-' lblFolderPath    Label      フォルダパス表示（BorderStyle=1, BackColor=薄いグレー）
+' lblFolderPath    Label      フォルダパス表示（BorderStyle=1。色は変えない）
 ' CommandButton3   Button     フォルダ変更（Caption: "変更"）
-' lblVBAProject    Label      Caption: "VBAプロジェクト"（小さいフォント・グレー）
+' lblVBAProject    Label      Caption: "VBAプロジェクト"（小さいフォント）
 ' CommandButton1   Button     Caption: "エクスポート →"
 ' CommandButton2   Button     Caption: "← インポート"
-' lblFolderFiles   Label      Caption: "フォルダ（ファイル）"（小さいフォント・グレー）
+' lblFolderFiles   Label      Caption: "フォルダ（ファイル）"（小さいフォント）
 '================================================================================
 
 Private m_Projects As Collection
@@ -112,10 +112,8 @@ Private Sub UpdateFolderDisplay(proj As Object)
 
     If folderPath = "" Then
         lblFolderPath.Caption = "（未設定）"
-        lblFolderPath.ForeColor = RGB(180, 180, 180)
     Else
         lblFolderPath.Caption = ShortenPath(folderPath)
-        lblFolderPath.ForeColor = RGB(80, 80, 80)
     End If
 End Sub
 

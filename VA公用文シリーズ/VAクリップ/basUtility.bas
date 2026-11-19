@@ -66,8 +66,11 @@ Public Sub SaveAppSetting(ByVal key As String, ByVal Value As String)
     On Error GoTo 0
 
     ' 設定を永続化するためにアドイン自身を上書き保存
+    ' Word は文書プロパティを変えただけでは「変更あり」としないため、
+    ' Saved を False にしてから保存する（しないと Save が何もしない）
     ' ※アドインが読み取り専用の場所に配置されている場合はエラーになるため無視する
     On Error Resume Next
+    ThisDocument.Saved = False
     ThisDocument.Save
     On Error GoTo 0
 End Sub
